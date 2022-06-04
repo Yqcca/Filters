@@ -1,4 +1,13 @@
 # Filters
+Algorithm Implementation for statistical filters.
+
+This repository contains:
+
+1. Kalman Filter Implementation
+2. Particle Filter Implementation
+3. Examples of filter usage
+
+
 ## Table of Contents
 - [Background](##background)
 - [Install](#install)
