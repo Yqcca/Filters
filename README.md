@@ -2,8 +2,8 @@
 ## Table of Contents
 - [Background](##background)
 - [Install](#install)
-- [Kalman Filter](#kalman filter)
-- [Particle Filter](#particle filter)
+- [Kalman Filter](#kalman-filter)
+- [Particle Filter](#particle-filter)
 - [Example](#example)
 - [Contributions](#contributions)
 
