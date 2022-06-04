@@ -1,11 +1,11 @@
 # Filters
 ## Table of Contents
-- Background
-- Install
-- Kalman Filter
-- Particle Filter
-- Example Filters
-- Contributions
+- [Background](##background)
+- [Install](#install)
+- [Kalman Filter](#kalman filter)
+- [Particle Filter](#particle filter)
+- [Example](#example)
+- [Contributions](#contributions)
 
 ## Background
 State space models are widely used in many applications. Estimating the unknown state based on the available measurements is an important and a well studied subject in the literature. Depending on the nature of the problem, these models could involve simple linear equations or complex nonlinearities. Filtering is a general statistical approach for estimating the evolving unknown states from the noisy measurements.  
@@ -24,6 +24,6 @@ In this report, we consider the hidden Markov model, where inference is tractabl
 - Bootstrap filter
 - Rao–Blackwellized particle filter
 
-## Example Filters
+## Example
 
 ## Contributions
