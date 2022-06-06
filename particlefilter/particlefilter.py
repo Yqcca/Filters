@@ -1,5 +1,4 @@
 import numpy as np
-from regex import W
 from scipy import stats
 import matplotlib.pyplot as plt
 
