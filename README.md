@@ -5,7 +5,7 @@ This repository contains:
 
 1. Kalman Filter Implementation
 2. Particle Filter Implementation
-3. Examples of filter usage
+3. Examples of Filter Usage
 
 
 ## Table of Contents
