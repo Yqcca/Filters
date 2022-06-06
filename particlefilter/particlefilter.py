@@ -1,6 +1,5 @@
 import numpy as np
 from scipy import stats
-import matplotlib.pyplot as plt
 
 # Linear Gaussian case
 def prior_sample(U, Q, N):
