@@ -42,7 +42,7 @@ for i in range(num_steps):
     measurement_states.append(new_measurement)
 measurement_states = np.array(measurement_states)
 
-m = linear_gaussian_particle_filter(A, Q, H, R, 70, num_steps, measurement_states)
+m = linear_gaussian_particle_filter(A, Q, H, R, 200, num_steps, measurement_states)
 print(m)
 
 
