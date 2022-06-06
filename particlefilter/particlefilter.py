@@ -167,7 +167,7 @@ def linear_gaussian_particle_filter(A, Q, H, R, N, T, y):
     Returns
     ----------
     m_final : arr
-        An numpy array of weights.
+        An numpy array of filtered dynamic states.
     '''
 
     # Initialization
@@ -225,7 +225,7 @@ def linear_gaussian_bootstrap_filter(A, Q, H, R, N, T, y):
     Returns
     ----------
     m_final : arr
-        An numpy array of weights.
+        An numpy array of filtered dynamic states.
     '''
 
     # Initialization
@@ -248,3 +248,37 @@ def linear_gaussian_bootstrap_filter(A, Q, H, R, N, T, y):
             m_final[k] += w[i] * x[i]
         prev_x = x
     return m_final
+
+def linear_gaussian_rb_particle_filter(A, Q, H, R, N, T, y):
+    '''
+    Derive the linear gaussian importance distribution.
+
+    Parameters
+    ----------
+    A : arr
+        The transition matrix of the dynamic model.
+    
+    Q : arr
+        The process noise.
+
+    H : arr
+        The measurement model matrix.
+    
+    R : arr
+        The measurement noise.
+
+    N : int
+        The number of samples.
+
+    T : int
+        The number of time steps.
+
+    y : arr
+        The T-length numpy array of measurement.
+
+    Returns
+    ----------
+    m_final : arr
+        An numpy array of filtered dynamic states.
+    '''
+    pass
