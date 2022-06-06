@@ -131,9 +131,10 @@ def linear_gaussian_importance_distribution(prev_x, y, A, Q):
     f : scipy.stats._multivariate.multivariate_normal_gen
         The estimated linear gaussian importance distribution.
     '''
+
     while prev_x.shape != y.shape:
         y = np.append(y,0)
-    m = 0.2*A@prev_x + 0.8*y
+    m = 0.5*A@prev_x + 0.5*y
     f = stats.multivariate_normal(mean=m, cov=Q)
     return f
 
@@ -174,9 +175,11 @@ def linear_gaussian_particle_filter(A, Q, H, R, N, T, y):
     n = A.shape[0]
     prev_x, prev_w = prior_sample(np.zeros(n), Q, N)
     m_final = np.zeros((T, n))
+    for i in range(N):
+        m_final[0] += prev_w[i] * prev_x[i]
 
     # Calculate weight for each time step
-    for k in range(T):
+    for k in range(1, T):
         x = np.zeros((N, n))
         w = np.zeros(N)
         for i in range(N):
@@ -184,11 +187,65 @@ def linear_gaussian_particle_filter(A, Q, H, R, N, T, y):
             x[i] = np.array(f.rvs(size=1))
             g1 = stats.multivariate_normal(mean=H@x[i], cov=R)
             g2 = stats.multivariate_normal(mean=A@prev_x[i], cov=Q)
-            w[i] = (prev_w[i]*g1.cdf(y[k])*g2.cdf(x[i])/f.cdf(x[i])) + np.finfo(float).eps
+            w[i] = (prev_w[i]*g1.pdf(y[k])*g2.pdf(x[i])/f.pdf(x[i])) + np.finfo(float).eps
         w = normalized_weight(w)
         w, x = check_resampling(w, x)
         for i in range(N):
             m_final[k] += w[i] * x[i]
         prev_x = x
         prev_w = w
+    return m_final
+
+def linear_gaussian_bootstrap_filter(A, Q, H, R, N, T, y):
+    '''
+    Derive the linear gaussian importance distribution.
+
+    Parameters
+    ----------
+    A : arr
+        The transition matrix of the dynamic model.
+    
+    Q : arr
+        The process noise.
+
+    H : arr
+        The measurement model matrix.
+    
+    R : arr
+        The measurement noise.
+
+    N : int
+        The number of samples.
+
+    T : int
+        The number of time steps.
+
+    y : arr
+        The T-length numpy array of measurement.
+
+    Returns
+    ----------
+    m_final : arr
+        An numpy array of weights.
+    '''
+
+    # Initialization
+    n = A.shape[0]
+    prev_x = np.random.multivariate_normal(mean=np.zeros(n), cov=Q, size = N)
+    m_final = np.zeros((T, n))
+
+    # Calculate weight for each time step
+    for k in range(T):
+        x = np.zeros((N, n))
+        w = np.zeros(N)
+        for i in range(N):
+            g1 = stats.multivariate_normal(mean=A@prev_x[i], cov=Q)
+            x[i] = np.array(g1.rvs(size=1))
+            g2 = stats.multivariate_normal(mean=H@x[i], cov=R)
+            w[i] = g2.pdf(y[k])
+        w = normalized_weight(w)
+        w, x = resampling(w, x)
+        for i in range(N):
+            m_final[k] += w[i] * x[i]
+        prev_x = x
     return m_final
