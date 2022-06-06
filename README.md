@@ -26,10 +26,9 @@ In this report, we consider the hidden Markov model, where inference is tractabl
 ## Kalman Filter
 
 ## Particle Filter
-- Importance sampling
-- Sequential importance sampling
-- Resampling
-- Sequential importance resampling(Particle Filter)
+- Particle Filter(Sequential importance resampling)
+  1. Linear Gaussian Case
+  2. Nonlinear Gaussian Case
 - Bootstrap filter
 - Rao–Blackwellized particle filter
 
