@@ -1,0 +1,65 @@
+from math import sin
+import numpy as np
+import matplotlib.pyplot as plt
+from particlefilter import nonlinear_gaussian_particle_filter, nonlinear_gaussian_bootstrap_filter
+
+dt = 0.1
+q = 1
+g = 9.8
+sigma = 1/4
+
+Q = np.array([[(q*dt**3)/3, (q*dt**2)/2],
+             [(q*dt**2)/2, q*dt]])
+
+R = np.array([[sigma**2]])
+
+
+def f(x):
+    y = np.zeros(x.shape)
+    y[0] = x[0] + x[1]*dt
+    y[1] = x[1] - g*sin(x[0])*dt
+    return y
+
+
+def h(x):
+    y = np.zeros(1)
+    y = sin(x[0])
+    return y
+
+
+# Simulate Motion
+num_steps = 100
+x_0, y_0 = 0, 0
+motion_states = [np.array([x_0, y_0])]
+for i in range(num_steps):
+    motion_noise = np.random.multivariate_normal(mean=np.array([0, 0]), cov=Q)
+    new_state = f(motion_states[-1]) + motion_noise
+    motion_states.append(new_state)
+motion_states = np.array(motion_states)
+
+# Simulate Measurement
+measurement_states = [x_0]
+for i in range(num_steps):
+    measurement_noise = np.random.multivariate_normal(mean=np.array([0]), cov=R)
+    new_measurement1 = h(motion_states[i]) + measurement_noise
+    new_measurement2 = np.random.uniform(-2, 2)
+    new_measurement = np.random.choice((new_measurement2, new_measurement2))
+    measurement_states.append(new_measurement)
+measurement_states = np.array(measurement_states)
+
+m1 = nonlinear_gaussian_particle_filter(f, Q, h, R, 800, num_steps, measurement_states)
+m2 = nonlinear_gaussian_bootstrap_filter(f, Q, h, R, 800, num_steps, measurement_states)
+m3 = [sin(i) for i in m1[:, 0]]
+m4 = [sin(i) for i in m2[:, 0]]
+
+# Plot the x, y pos of the states
+t = [i*dt for i in range(num_steps+1)]
+hy = [sin(i) for i in motion_states[:, 0]]
+plt.plot(t, hy)
+plt.scatter(t, measurement_states)
+plt.plot(t[:-1], m3)
+plt.plot(t[:-1], m4)
+plt.xlabel('Time step')
+plt.ylabel('Angle position')
+plt.legend(['Position', 'Measured Postion', 'Particle Filter', 'Bootstrap Filter'])
+plt.show()
