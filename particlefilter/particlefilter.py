@@ -284,7 +284,7 @@ def nonlinear_gaussian_importance_distribution(prev_x, y, f, Q):
 
     while prev_x.shape != y.shape:
         y = np.append(y, 0)
-    m = 0.6*f(prev_x) + 0.4*y
+    m = 0.7*f(prev_x) + 0.3*y
     f = stats.multivariate_normal(mean=m, cov=Q)
     return f
 
