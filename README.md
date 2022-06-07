@@ -37,5 +37,6 @@ In this report, we consider the hidden Markov model, where inference is tractabl
 ## Example
 - Car tracking demo
 - Pendulum tracking demo
+- Cluttered pendulum tracking demo
 
 ## Contributions
