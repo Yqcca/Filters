@@ -24,20 +24,20 @@ H = np.array([[1, 0, 0, 0],
 R = np.array([[sigma_1**2, 0],
              [0, sigma_2**2]])
 
-#Simulate Motion
+# Simulate Motion
 num_steps = 100
 x_0, y_0, vx_0, vy_0 = 0, 0, 0, 0
 motion_states = [np.array([x_0, y_0, vx_0, vy_0])]
 for i in range(num_steps):
-    motion_noise = np.random.multivariate_normal(mean=np.array([0,0,0,0]), cov=Q)
+    motion_noise = np.random.multivariate_normal(mean=np.array([0, 0, 0, 0]), cov=Q)
     new_state = A @ motion_states[-1] + motion_noise
     motion_states.append(new_state)
 motion_states = np.array(motion_states)
 
-#Simulate Measurement
+# Simulate Measurement
 measurement_states = [np.array([x_0, y_0])]
 for i in range(num_steps):
-    measurement_noise = np.random.multivariate_normal(mean=np.array([0,0]), cov=R)
+    measurement_noise = np.random.multivariate_normal(mean=np.array([0, 0]), cov=R)
     new_measurement = H @ motion_states[i] + measurement_noise
     measurement_states.append(new_measurement)
 measurement_states = np.array(measurement_states)
@@ -45,11 +45,11 @@ measurement_states = np.array(measurement_states)
 m1 = linear_gaussian_particle_filter(A, Q, H, R, 1000, num_steps, measurement_states)
 m2 = linear_gaussian_bootstrap_filter(A, Q, H, R, 1000, num_steps, measurement_states)
 
-#Plot the x, y pos of the states
-plt.plot(motion_states[:,0], motion_states[:,1])
-plt.scatter(measurement_states[:,0], measurement_states[:,1])
-plt.plot(m1[:,0], m1[:,1])
-plt.plot(m2[:,0], m2[:,1])
+# Plot the x, y pos of the states
+plt.plot(motion_states[:, 0], motion_states[:, 1])
+plt.scatter(measurement_states[:, 0], measurement_states[:, 1])
+plt.plot(m1[:, 0], m1[:, 1])
+plt.plot(m2[:, 0], m2[:, 1])
 plt.xlabel('x position')
 plt.ylabel('y position')
 plt.legend(['Position', 'Measured Postion', 'Particle Filter', 'Bootstrap_Filter'])

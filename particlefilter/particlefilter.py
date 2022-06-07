@@ -1,6 +1,7 @@
 import numpy as np
 from scipy import stats
 
+
 # Linear Gaussian case
 def prior_sample(U, Q, N):
     '''
@@ -10,10 +11,10 @@ def prior_sample(U, Q, N):
     ----------
     U : arr
         Mean of prior distribution.
-    
+
     Q : arr
         Covariance of prior distribution.
-    
+
     N : int
         Number of samples.
 
@@ -25,9 +26,10 @@ def prior_sample(U, Q, N):
         An initialized numpy array weights.
     '''
 
-    x_0 = np.random.multivariate_normal(mean=U, cov=Q, size = N)
+    x_0 = np.random.multivariate_normal(mean=U, cov=Q, size=N)
     w_0 = np.array([1/N for i in range(N)])
     return x_0, w_0
+
 
 def normalized_weight(w):
 
@@ -50,6 +52,7 @@ def normalized_weight(w):
         v.append(w[i]/s)
     return np.array(v)
 
+
 def resampling(w, x):
     '''
     Derive the resampling of samples based on their weights.
@@ -58,7 +61,7 @@ def resampling(w, x):
     ----------
     w : arr
         An numpy array normalized weights.
-    
+
     x : arr
         An numpy array samples.
 
@@ -72,11 +75,12 @@ def resampling(w, x):
     ind = [i for i in range(len(w))]
     n = np.zeros(x.shape)
     for i in range(len(w)):
-        n[i] = x[np.random.choice(ind, size = 1, p = w)]
+        n[i] = x[np.random.choice(ind, size=1, p=w)]
     m = np.zeros(len(w))
     for i in range(len(w)):
         m[i] = 1/len(w)
     return m, n
+
 
 def check_resampling(w, x):
     '''
@@ -86,7 +90,7 @@ def check_resampling(w, x):
     ----------
     w : arr
         An numpy array normalized weights.
-    
+
     x : arr
         An numpy array samples.
 
@@ -107,6 +111,7 @@ def check_resampling(w, x):
     else:
         return w, x
 
+
 def linear_gaussian_importance_distribution(prev_x, y, A, Q):
     '''
     Derive the linear gaussian importance distribution.
@@ -115,7 +120,7 @@ def linear_gaussian_importance_distribution(prev_x, y, A, Q):
     ----------
     prev_x : arr
         A sample of x at the previous time-step.
-    
+
     y : arr
         The measurement of x.
 
@@ -132,10 +137,11 @@ def linear_gaussian_importance_distribution(prev_x, y, A, Q):
     '''
 
     while prev_x.shape != y.shape:
-        y = np.append(y,0)
+        y = np.append(y, 0)
     m = 0.6*A@prev_x + 0.4*y
     f = stats.multivariate_normal(mean=m, cov=Q)
     return f
+
 
 def linear_gaussian_particle_filter(A, Q, H, R, N, T, y):
     '''
@@ -145,13 +151,13 @@ def linear_gaussian_particle_filter(A, Q, H, R, N, T, y):
     ----------
     A : arr
         The transition matrix of the dynamic model.
-    
+
     Q : arr
         The process noise.
 
     H : arr
         The measurement model matrix.
-    
+
     R : arr
         The measurement noise.
 
@@ -195,6 +201,7 @@ def linear_gaussian_particle_filter(A, Q, H, R, N, T, y):
         prev_w = w
     return m_final
 
+
 def linear_gaussian_bootstrap_filter(A, Q, H, R, N, T, y):
     '''
     Derive the linear gaussian importance distribution.
@@ -203,13 +210,13 @@ def linear_gaussian_bootstrap_filter(A, Q, H, R, N, T, y):
     ----------
     A : arr
         The transition matrix of the dynamic model.
-    
+
     Q : arr
         The process noise.
 
     H : arr
         The measurement model matrix.
-    
+
     R : arr
         The measurement noise.
 
@@ -230,7 +237,7 @@ def linear_gaussian_bootstrap_filter(A, Q, H, R, N, T, y):
 
     # Initialization
     n = A.shape[0]
-    prev_x = np.random.multivariate_normal(mean=np.zeros(n), cov=Q, size = N)
+    prev_x = np.random.multivariate_normal(mean=np.zeros(n), cov=Q, size=N)
     m_final = np.zeros((T, n))
 
     # Calculate weight for each time step
@@ -249,6 +256,7 @@ def linear_gaussian_bootstrap_filter(A, Q, H, R, N, T, y):
         prev_x = x
     return m_final
 
+
 # Nonlinear Gaussian case
 def nonlinear_gaussian_importance_distribution(prev_x, y, f, Q):
     '''
@@ -258,7 +266,7 @@ def nonlinear_gaussian_importance_distribution(prev_x, y, f, Q):
     ----------
     prev_x : arr
         A sample of x at the previous time-step.
-    
+
     y : arr
         The measurement of x.
 
@@ -275,10 +283,11 @@ def nonlinear_gaussian_importance_distribution(prev_x, y, f, Q):
     '''
 
     while prev_x.shape != y.shape:
-        y = np.append(y,0)
+        y = np.append(y, 0)
     m = 0.6*f(prev_x) + 0.4*y
     f = stats.multivariate_normal(mean=m, cov=Q)
     return f
+
 
 def nonlinear_gaussian_particle_filter(f, Q, h, R, N, T, y):
     '''
@@ -294,7 +303,7 @@ def nonlinear_gaussian_particle_filter(f, Q, h, R, N, T, y):
 
     h : func
         The measurement model map.
-    
+
     R : arr
         The measurement noise.
 
@@ -338,6 +347,7 @@ def nonlinear_gaussian_particle_filter(f, Q, h, R, N, T, y):
         prev_w = w
     return m_final
 
+
 def nonlinear_gaussian_bootstrap_filter(f, Q, h, R, N, T, y):
     '''
     Derive the linear gaussian importance distribution.
@@ -346,13 +356,13 @@ def nonlinear_gaussian_bootstrap_filter(f, Q, h, R, N, T, y):
     ----------
     f : func
         The transition map of the dynamic model.
-    
+
     Q : arr
         The process noise.
 
     h : func
         The measurement model map.
-    
+
     R : arr
         The measurement noise.
 
@@ -373,7 +383,7 @@ def nonlinear_gaussian_bootstrap_filter(f, Q, h, R, N, T, y):
 
     # Initialization
     n = Q.shape[0]
-    prev_x = np.random.multivariate_normal(mean=np.zeros(n), cov=Q, size = N)
+    prev_x = np.random.multivariate_normal(mean=np.zeros(n), cov=Q, size=N)
     m_final = np.zeros((T, n))
 
     # Calculate weight for each time step
@@ -392,6 +402,7 @@ def nonlinear_gaussian_bootstrap_filter(f, Q, h, R, N, T, y):
         prev_x = x
     return m_final
 
+
 def linear_gaussian_rb_particle_filter(A, Q, H, R, N, T, y):
     '''
     Derive the linear gaussian importance distribution.
@@ -400,13 +411,13 @@ def linear_gaussian_rb_particle_filter(A, Q, H, R, N, T, y):
     ----------
     A : arr
         The transition matrix of the dynamic model.
-    
+
     Q : arr
         The process noise.
 
     H : arr
         The measurement model matrix.
-    
+
     R : arr
         The measurement noise.
 
