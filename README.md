@@ -30,8 +30,12 @@ In this report, we consider the hidden Markov model, where inference is tractabl
   1. Linear Gaussian Case
   2. Nonlinear Gaussian Case
 - Bootstrap filter
+  1. Linear Gaussian Case
+  2. Nonlinear Gaussian Case
 - Rao–Blackwellized particle filter
 
 ## Example
+- Car tracking demo
+- Pendulum tracking demo
 
 ## Contributions
