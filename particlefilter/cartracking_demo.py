@@ -25,7 +25,7 @@ R = np.array([[sigma_1**2, 0],
              [0, sigma_2**2]])
 
 # Simulate Motion
-num_steps = 100
+num_steps = 60
 x_0, y_0, vx_0, vy_0 = 0, 0, 0, 0
 motion_states = [np.array([x_0, y_0, vx_0, vy_0])]
 for i in range(num_steps):
