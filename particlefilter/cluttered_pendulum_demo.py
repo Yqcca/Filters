@@ -1,7 +1,8 @@
 from math import sin
 import numpy as np
 import matplotlib.pyplot as plt
-from particlefilter import nonlinear_gaussian_particle_filter, nonlinear_gaussian_bootstrap_filter
+from particlefilter import nonlinear_gaussian_adaptive_resampling_particle_filter, nonlinear_gaussian_bootstrap_filter,\
+    nonlinear_gaussian_resampling_particle_filter
 
 dt = 0.1
 q = 1
@@ -47,7 +48,7 @@ for i in range(num_steps):
     measurement_states.append(new_measurement)
 measurement_states = np.array(measurement_states)
 
-m1 = nonlinear_gaussian_particle_filter(f, Q, h, R, 800, num_steps, measurement_states)
+m1 = nonlinear_gaussian_adaptive_resampling_particle_filter(f, Q, h, R, 800, num_steps, measurement_states)
 m2 = nonlinear_gaussian_bootstrap_filter(f, Q, h, R, 800, num_steps, measurement_states)
 m3 = [sin(i) for i in m1[:, 0]]
 m4 = [sin(i) for i in m2[:, 0]]

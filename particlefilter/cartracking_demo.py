@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from particlefilter import linear_gaussian_particle_filter, linear_gaussian_bootstrap_filter
+from particlefilter import linear_gaussian_adaptive_resampling_particle_filter, linear_gaussian_bootstrap_filter,\
+    linear_gaussian_resampling_particle_filter
 
 dt = 0.1
 q_1 = 1
@@ -42,7 +43,7 @@ for i in range(num_steps):
     measurement_states.append(new_measurement)
 measurement_states = np.array(measurement_states)
 
-m1 = linear_gaussian_particle_filter(A, Q, H, R, 1000, num_steps, measurement_states)
+m1 = linear_gaussian_adaptive_resampling_particle_filter(A, Q, H, R, 1000, num_steps, measurement_states)
 m2 = linear_gaussian_bootstrap_filter(A, Q, H, R, 1000, num_steps, measurement_states)
 
 # Plot the x, y pos of the states
