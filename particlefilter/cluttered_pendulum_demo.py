@@ -44,7 +44,7 @@ for i in range(num_steps):
     measurement_noise = np.random.multivariate_normal(mean=np.array([0]), cov=R)
     new_measurement1 = h(motion_states[i]) + measurement_noise
     new_measurement2 = np.random.uniform(-2, 2)
-    new_measurement = np.random.choice((new_measurement2, new_measurement2))
+    new_measurement = np.random.choice((new_measurement1, new_measurement2))
     measurement_states.append(new_measurement)
 measurement_states = np.array(measurement_states)
 

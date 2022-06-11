@@ -7,7 +7,7 @@ from particlefilter import nonlinear_gaussian_adaptive_resampling_particle_filte
 dt = 0.1
 q = 1
 g = 9.81
-sigma = 0.5
+sigma = 1/4
 
 Q = np.array([[(q*dt**3)/3, (q*dt**2)/2],
              [(q*dt**2)/2, q*dt]])
@@ -45,10 +45,10 @@ for i in range(num_steps):
     measurement_states.append(new_measurement)
 measurement_states = np.array(measurement_states)
 
-m1 = nonlinear_gaussian_adaptive_resampling_particle_filter(f, Q, h, R, 1, num_steps, measurement_states)
+'''m1 = nonlinear_gaussian_adaptive_resampling_particle_filter(f, Q, h, R, 1, num_steps, measurement_states)
 m2 = nonlinear_gaussian_bootstrap_filter(f, Q, h, R, 1, num_steps, measurement_states)
 m3 = [sin(i) for i in m1[:, 0]]
-m4 = [sin(i) for i in m2[:, 0]]
+m4 = [sin(i) for i in m2[:, 0]]'''
 
 # Plot the x, y pos of the states
 t = [i*dt for i in range(num_steps+1)]
