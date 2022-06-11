@@ -52,7 +52,7 @@ new_angle = np.array(new_angle)
 filtered_states = []
 
 m_0 = np.array([[1.5, 0]]).T
-P_0 = np.zeros((2, 2))
+P_0 = Q
 m_current = m_0.copy()
 P_current = P_0.copy()
 

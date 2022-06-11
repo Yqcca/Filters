@@ -25,6 +25,25 @@ y_1 = points.Wm
 x = np.array([[1, 1]]).T
 arr = np.array([x for _ in range(5)])
 arr_T = arr.T
-res = x_1 @ arr.T
+res = x_1 * arr.T
+res = res.T
+g = 9.8
 
+def f(x):
+    return np.transpose(np.array([[x[0, 0] + x[1, 0]*dt,
+                    x[1, 0] - g * np.sin(x[0, 0]) * dt]]))
+
+sigmas = np.array([[ 1.50000000e+00,  0.00000000e+00],
+              [ 1.50002887e+00,  8.66025404e-04],
+              [ 1.50000000e+00,  5.00000000e-04],
+              [ 1.49997113e+00, -8.66025404e-04],
+              [ 1.50000000e+00, -5.00000000e-04]])
+
+f_sigmas = np.empty((5, 2))
+for i in range(5):
+    f_sigmas[i] = f(np.array([[sigmas[i, k] for k in range(2)]]).T).T
+
+print("k")
+k = points.Wc * f_sigmas.T
+p_m = np.sum(points.Wc * f_sigmas.T, axis=0)
 print("Done")
