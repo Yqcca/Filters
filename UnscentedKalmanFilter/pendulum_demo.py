@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from EKF import predict, update
+from UKF import predict, update
 
 
 #Pendulum tracking with EKF (x 2d)
@@ -51,15 +51,20 @@ new_angle = np.array(new_angle)
 
 filtered_states = []
 
+#start with p = Q?
 m_0 = np.array([[1.5, 0]]).T
 P_0 = Q
 m_current = m_0.copy()
 P_current = P_0.copy()
 
+alpha=0.01
+beta=2
+kappa=0
+
 for i in range(num_steps):
-    predicted_m, predicted_P = predict(f, F, Q, m_current, P_current)
+    predicted_m, predicted_P = predict(f, m_current.T[0], P_current, Q, alpha, beta, kappa, 2)
     y = measurement_angle[i+1]
-    m_current, P_current = update(h, H, R, y, predicted_m, predicted_P)
+    m_current, P_current = update(h, R, y, predicted_m, predicted_P, alpha, beta, kappa, 2)
     filtered_states.append(m_current)
 
 filtered_states = np.array(filtered_states)
@@ -70,4 +75,3 @@ plt.plot(t, np.sin(true_states[:, 0]))
 plt.scatter(t, measurement_angle)
 plt.scatter(t[1:], np.sin(filtered_states[:, 0]))
 plt.show()
-
