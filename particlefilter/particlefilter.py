@@ -172,6 +172,9 @@ def linear_gaussian_adaptive_resampling_particle_filter(A, Q, H, R, N, T, y):
 
     Returns
     ----------
+    w_record: list
+        A list containing N numpy array of weights.
+
     m_final : arr
         An numpy array of filtered dynamic states.
     '''
@@ -179,6 +182,7 @@ def linear_gaussian_adaptive_resampling_particle_filter(A, Q, H, R, N, T, y):
     # Initialization
     n = A.shape[0]
     prev_x, prev_w = prior_sample(np.zeros(n), Q, N)
+    w_record = [prev_w]
     m_final = np.zeros((T, n))
     for i in range(N):
         m_final[0] += prev_w[i] * prev_x[i]
@@ -199,7 +203,8 @@ def linear_gaussian_adaptive_resampling_particle_filter(A, Q, H, R, N, T, y):
             m_final[k] += w[i] * x[i]
         prev_x = x
         prev_w = w
-    return m_final
+        w_record.append(prev_w)
+    return w_record, m_final
 
 
 def linear_gaussian_resampling_particle_filter(A, Q, H, R, N, T, y):
@@ -231,6 +236,9 @@ def linear_gaussian_resampling_particle_filter(A, Q, H, R, N, T, y):
 
     Returns
     ----------
+    w_record: list
+        A list containing N numpy array of weights.
+
     m_final : arr
         An numpy array of filtered dynamic states.
     '''
@@ -238,6 +246,7 @@ def linear_gaussian_resampling_particle_filter(A, Q, H, R, N, T, y):
     # Initialization
     n = A.shape[0]
     prev_x, prev_w = prior_sample(np.zeros(n), Q, N)
+    w_record = [prev_w]
     m_final = np.zeros((T, n))
     for i in range(N):
         m_final[0] += prev_w[i] * prev_x[i]
@@ -258,7 +267,8 @@ def linear_gaussian_resampling_particle_filter(A, Q, H, R, N, T, y):
             m_final[k] += w[i] * x[i]
         prev_x = x
         prev_w = w
-    return m_final
+        w_record.append(prev_w)
+    return w_record, m_final
 
 
 def linear_gaussian_bootstrap_filter(A, Q, H, R, N, T, y):
@@ -290,12 +300,16 @@ def linear_gaussian_bootstrap_filter(A, Q, H, R, N, T, y):
 
     Returns
     ----------
+    w_record: list
+        A list containing N numpy array of weights.
+
     m_final : arr
         An numpy array of filtered dynamic states.
     '''
 
     # Initialization
     n = A.shape[0]
+    w_record = []
     prev_x = np.random.multivariate_normal(mean=np.zeros(n), cov=Q, size=N)
     m_final = np.zeros((T, n))
 
@@ -313,7 +327,8 @@ def linear_gaussian_bootstrap_filter(A, Q, H, R, N, T, y):
         for i in range(N):
             m_final[k] += w[i] * x[i]
         prev_x = x
-    return m_final
+        w_record.append(w)
+    return w_record, m_final
 
 
 # Nonlinear Gaussian case
@@ -377,6 +392,9 @@ def nonlinear_gaussian_adaptive_resampling_particle_filter(f, Q, h, R, N, T, y):
 
     Returns
     ----------
+    w_record: list
+        A list containing N numpy array of weights.
+
     m_final : arr
         An numpy array of filtered dynamic states.
     '''
@@ -384,6 +402,7 @@ def nonlinear_gaussian_adaptive_resampling_particle_filter(f, Q, h, R, N, T, y):
     # Initialization
     n = Q.shape[0]
     prev_x, prev_w = prior_sample(np.zeros(n), Q, N)
+    w_record = [prev_w]
     m_final = np.zeros((T, n))
     for i in range(N):
         m_final[0] += prev_w[i] * prev_x[i]
@@ -404,7 +423,8 @@ def nonlinear_gaussian_adaptive_resampling_particle_filter(f, Q, h, R, N, T, y):
             m_final[k] += w[i] * x[i]
         prev_x = x
         prev_w = w
-    return m_final
+        w_record.append(prev_w)
+    return w_record, m_final
 
 
 def nonlinear_gaussian_resampling_particle_filter(f, Q, h, R, N, T, y):
@@ -436,6 +456,9 @@ def nonlinear_gaussian_resampling_particle_filter(f, Q, h, R, N, T, y):
 
     Returns
     ----------
+    w_record: list
+        A list containing N numpy array of weights.
+
     m_final : arr
         An numpy array of filtered dynamic states.
     '''
@@ -443,6 +466,7 @@ def nonlinear_gaussian_resampling_particle_filter(f, Q, h, R, N, T, y):
     # Initialization
     n = Q.shape[0]
     prev_x, prev_w = prior_sample(np.zeros(n), Q, N)
+    w_record = [prev_w]
     m_final = np.zeros((T, n))
     for i in range(N):
         m_final[0] += prev_w[i] * prev_x[i]
@@ -463,7 +487,8 @@ def nonlinear_gaussian_resampling_particle_filter(f, Q, h, R, N, T, y):
             m_final[k] += w[i] * x[i]
         prev_x = x
         prev_w = w
-    return m_final
+        w_record.append(prev_w)
+    return w_record, m_final
 
 
 def nonlinear_gaussian_bootstrap_filter(f, Q, h, R, N, T, y):
@@ -495,12 +520,16 @@ def nonlinear_gaussian_bootstrap_filter(f, Q, h, R, N, T, y):
 
     Returns
     ----------
+    w_record: list
+        A list containing N numpy array of weights.
+
     m_final : arr
         An numpy array of filtered dynamic states.
     '''
 
     # Initialization
     n = Q.shape[0]
+    w_record = []
     prev_x = np.random.multivariate_normal(mean=np.zeros(n), cov=Q, size=N)
     m_final = np.zeros((T, n))
 
@@ -518,4 +547,5 @@ def nonlinear_gaussian_bootstrap_filter(f, Q, h, R, N, T, y):
         for i in range(N):
             m_final[k] += w[i] * x[i]
         prev_x = x
-    return m_final
+        w_record.append(w)
+    return w_record, m_final

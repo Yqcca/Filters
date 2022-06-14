@@ -48,14 +48,15 @@ for i in range(num_steps):
     measurement_states.append(new_measurement)
 measurement_states = np.array(measurement_states)
 
-m1 = nonlinear_gaussian_adaptive_resampling_particle_filter(f, Q, h, R, 800, num_steps, measurement_states)
-m2 = nonlinear_gaussian_bootstrap_filter(f, Q, h, R, 800, num_steps, measurement_states)
+w1, m1 = nonlinear_gaussian_adaptive_resampling_particle_filter(f, Q, h, R, 800, num_steps, measurement_states)
+w2, m2 = nonlinear_gaussian_bootstrap_filter(f, Q, h, R, 800, num_steps, measurement_states)
 m3 = [sin(i) for i in m1[:, 0]]
 m4 = [sin(i) for i in m2[:, 0]]
 
 # Plot the x, y pos of the states
 t = [i*dt for i in range(num_steps+1)]
 hy = [sin(i) for i in motion_states[:, 0]]
+plt.figure('angle position vs time step')
 plt.plot(t, hy)
 plt.scatter(t, measurement_states)
 plt.plot(t[:-1], m3)
@@ -63,4 +64,5 @@ plt.plot(t[:-1], m4)
 plt.xlabel('Time step')
 plt.ylabel('Angle position')
 plt.legend(['Position', 'Measured Postion', 'Particle Filter', 'Bootstrap Filter'])
+plt.title('angle position vs time step')
 plt.show()
