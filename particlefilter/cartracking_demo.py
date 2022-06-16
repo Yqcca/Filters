@@ -1,5 +1,4 @@
 import numpy as np
-from scipy import stats
 import math
 import matplotlib.pyplot as plt
 from particlefilter import linear_gaussian_adaptive_resampling_particle_filter, linear_gaussian_bootstrap_filter,\
@@ -60,6 +59,7 @@ plt.xlabel('x position')
 plt.ylabel('y position')
 plt.title('y position vs x position')
 plt.legend(['Position', 'Measured Postion', 'Particle Filter', 'Bootstrap_Filter'])
+plt.savefig('tmp1.pdf', bbox_inches='tight')
 
 t = [i for i in range(num_steps)]
 
@@ -72,47 +72,27 @@ def draw_gaussian_at(mu, sd, height, xpos):
     return plt.plot(gaussian + xpos, support),\
          plt.hlines(y=mu, xmin=gaussian.min()+xpos, xmax=gaussian.max()+xpos, linewidth=2, color='r', linestyle='--')
 
+# Compute covariance:
+def covar(w, A, N, a):
+    l_cov = np.zeros(A.shape)
+    for i in range(N):
+        l_cov += w[a][i] * A
+    return l_cov[0, 0], l_cov[1, 1]
+
 # First covariance 
-l_cov1 = np.zeros((4, 4))
-l_cov2 = np.zeros((2, 2))
-for i in range(N):
-    l_cov1 += w1[1][i] * Q
-    l_cov2 += w2[1][i] * R
-
-l_cov1_x = l_cov1[0, 0]
-l_cov1_y = l_cov1[1, 1]
-
-l_cov2_x = l_cov2[0, 0]
-l_cov2_y = l_cov2[1, 1]
+l_cov1_x, l_cov1_y = covar(w1, Q, N, 1)
+l_cov2_x, l_cov2_y = covar(w2, R, N, 1)
 
 # Last covariance
-l_cov3 = np.zeros((4, 4))
-l_cov4 = np.zeros((2, 2))
-for i in range(N):
-    l_cov3 += w1[-1][i] * Q
-    l_cov4 += w2[-1][i] * R
-
-l_cov3_x = l_cov3[0, 0]
-l_cov3_y = l_cov3[1, 1]
-
-l_cov4_x = l_cov4[0, 0]
-l_cov4_y = l_cov4[1, 1]
+l_cov3_x, l_cov3_y =  covar(w1, Q, N, -1)
+l_cov4_x, l_cov4_y = covar(w2, R, N, -1)
 
 # Middle covariance
 mid = num_steps // 2
-l_cov5 = np.zeros((4, 4))
-l_cov6 = np.zeros((2, 2))
-for i in range(N):
-    l_cov5 += w1[mid][i] * Q
-    l_cov6 += w2[mid][i] * R
+l_cov5_x, l_cov5_y = covar(w1, Q, N, mid)
+l_cov6_x, l_cov6_y = covar(w2, R, N, mid)
 
-l_cov5_x = l_cov5[0, 0]
-l_cov5_y = l_cov5[1, 1]
-
-l_cov6_x = l_cov6[0, 0]
-l_cov6_y = l_cov6[1, 1]
-
-# Plot
+# Plot x position
 plt.figure('x position vs time step')
 plt.plot(t, motion_states[1:, 0])
 plt.scatter(t, measurement_states[1:, 0])
@@ -131,7 +111,9 @@ plt.xlabel('time step')
 plt.ylabel('x position')
 plt.title('x position vs time step')
 plt.legend(['Position', 'Measured Postion', 'Particle Filter', 'Bootstrap_Filter'])
+plt.savefig('tmp2.pdf', bbox_inches='tight')
 
+# Plot x position
 plt.figure('y position vs time step')
 plt.plot(t, motion_states[1:, 1])
 plt.scatter(t, measurement_states[1:, 1])
@@ -151,20 +133,35 @@ plt.ylabel('y position')
 plt.title('y position vs time step')
 plt.legend(['Position', 'Measured Postion', 'Particle Filter', 'Bootstrap_Filter'])
 
-plt.show()
+plt.savefig('tmp3.pdf', bbox_inches='tight')
 
 '''# Mse of adaptive resampling particle filter
+# Compute average MSE
+def aver_mse(m, motion_states, num_steps):
+    mse_x = 0
+    mse_y = 0
+    for i in range(num_steps):
+        mse_x += (m[i, 0] - motion_states[i, 0])**2
+        mse_y += (m[i, 1] - motion_states[i, 1])**2
+    mse_x = mse_x / num_steps
+    mse_y = mse_y / num_steps
+    return mse_x, mse_y
+
 mse_x1 = 0
 mse_y1 = 0
 for i in range(num_steps):
-    mse_x1 += abs(m1[i, 0] - motion_states[i, 0])
-    mse_y1 += abs(m1[i, 1] - motion_states[i, 1])
+    mse_x1 += (m1[i, 0] - motion_states[i, 0])**2
+    mse_y1 += (m1[i, 1] - motion_states[i, 1])**2
+mse_x1 = mse_x1 / num_steps
+mse_y1 = mse_y1 / num_steps
 
 # Mse of bootstrap filter
 mse_x2 = 0
 mse_y2 = 0
 for i in range(num_steps):
-    mse_x2 += abs(m2[i, 0] - motion_states[i, 0])
-    mse_y2 += abs(m2[i, 1] - motion_states[i, 1])
+    mse_x2 += (m2[i, 0] - motion_states[i, 0])**2
+    mse_y2 += (m2[i, 1] - motion_states[i, 1])**2
+mse_x2 = mse_x2 / num_steps
+mse_y2 = mse_y2 / num_steps
 
 print([mse_x1, mse_y1], [mse_x2, mse_y2])'''
