@@ -29,10 +29,10 @@ R = np.array([[sigma_1**2, 0],
 # Simulate Motion
 num_steps = 100
 x_0, y_0, vx_0, vy_0 = 0, 0, 0, 0
-n0 = 10
-n1 = 100
+n0 = 100
+n1 = 500
 n2 = 1000
-n3 = 5000
+n3 = 2000
 
 
 motion_states = [np.array([x_0, y_0, vx_0, vy_0])]
@@ -55,33 +55,32 @@ w1, m1 = linear_gaussian_adaptive_resampling_particle_filter(A, Q, H, R, n1, num
 w2, m2 = linear_gaussian_adaptive_resampling_particle_filter(A, Q, H, R, n2, num_steps, measurement_states)
 w3, m3 = linear_gaussian_adaptive_resampling_particle_filter(A, Q, H, R, n3, num_steps, measurement_states)
 
-# Compute average covariance in each step
-def aver_covar(w, A, N):
+# Compute total covariance
+def total_covar(w, A, N):
     l_cov = np.zeros(A.shape)
-    for i in range(N):
-        for a in w.shape[0]:
+    for a in range(len(w)):
+        for i in range(N):
             l_cov += w[a][i] * A
-    return l_cov[0, 0]/N, l_cov[1, 1]/N
-a_cov0_x, a_cov0_y = aver_covar(w0, Q, n0)
-a_cov1_x, a_cov1_y = aver_covar(w1, Q, n1)
-a_cov2_x, a_cov2_y = aver_covar(w2, Q, n2)
-a_cov3_x, a_cov3_y = aver_covar(w3, Q, n3)
+    return l_cov[0, 0], l_cov[1, 1]
 
-# Compute average MSE in x position and y position
-def aver_mse(m, motion_states, num_steps):
+a_cov0_x, a_cov0_y = total_covar(w0, Q, n0)
+a_cov1_x, a_cov1_y = total_covar(w1, Q, n1)
+a_cov2_x, a_cov2_y = total_covar(w2, Q, n2)
+a_cov3_x, a_cov3_y = total_covar(w3, Q, n3)
+
+# Compute total MSE in position
+def avg_mse(m, motion_states, num_steps):
     mse_x = 0
     mse_y = 0
-    for i in range(num_steps):
+    for i in range(num_steps-1):
         mse_x += (m[i, 0] - motion_states[i, 0])**2
         mse_y += (m[i, 1] - motion_states[i, 1])**2
-    mse_x = mse_x / num_steps
-    mse_y = mse_y / num_steps
-    return mse_x, mse_y
+    return (mse_x + mse_y)/(2*num_steps)
 
-a_mse0_x, a_mse0_y = aver_covar(m0, motion_states, n0)
-a_mse1_x, a_mse1_y = aver_covar(m1, motion_states, n1)
-a_mse2_x, a_mse2_y = aver_covar(m2, motion_states, n2)
-a_mse3_x, a_mse3_y = aver_covar(m3, motion_states, n3)
+a_mse0= avg_mse(m0, motion_states, num_steps)
+a_mse1= avg_mse(m1, motion_states, num_steps)
+a_mse2= avg_mse(m2, motion_states, num_steps)
+a_mse3= avg_mse(m3, motion_states, num_steps)
 
 # Plot the x, y pos of the states
 plt.figure('Car Position')
@@ -94,7 +93,7 @@ plt.plot(m3[:, 0], m3[:, 1])
 plt.xlabel('x position')
 plt.ylabel('y position')
 plt.title('y position vs x position')
-plt.legend(['Position', 'Measured Postion', 'n=10 Particle Filter', 'n=100 Particle Filter', 'n=1000 Particle Filter', 'n=5000 Particle Filter'])
+plt.legend(['Position', 'Measured Postion', 'n=100 Particle Filter', 'n=500 Particle Filter', 'n=1000 Particle Filter', 'n=3000 Particle Filter'])
 plt.savefig('number_of_particle.pdf', bbox_inches='tight')
 
 t = [i for i in range(num_steps)]
@@ -109,7 +108,7 @@ plt.plot(t, m3[:, 0])
 plt.xlabel('time step')
 plt.ylabel('x position')
 plt.title('x position vs time step')
-plt.legend(['Position', 'Measured Postion', 'n=10 Particle Filter', 'n=100 Particle Filter', 'n=1000 Particle Filter', 'n=5000 Particle Filter'])
+plt.legend(['Position', 'Measured Postion', 'n=100 Particle Filter', 'n=500 Particle Filter', 'n=1000 Particle Filter', 'n=3000 Particle Filter'])
 plt.savefig('x-position.pdf', bbox_inches='tight')
 
 # Plot y-position
@@ -123,8 +122,31 @@ plt.plot(t, m3[:, 1])
 plt.xlabel('time step')
 plt.ylabel('y position')
 plt.title('y position vs time step')
-plt.legend(['Position', 'Measured Postion', 'n=10 Particle Filter', 'n=100 Particle Filter', 'n=1000 Particle Filter', 'n=5000 Particle Filter'])
+plt.legend(['Position', 'Measured Postion', 'n=100 Particle Filter', 'n=500 Particle Filter', 'n=1000 Particle Filter', 'n=3000 Particle Filter'])
 plt.savefig('y-position.pdf', bbox_inches='tight')
 
+# Plot aver_cov
+plt.figure('total x-covariance vs number of particles')
+plt.plot([n0, n1, n2, n3], [a_cov0_x, a_cov1_x, a_cov2_x, a_cov3_x], linewidth=1)
+plt.xlabel('number of particles')
+plt.ylabel('x-total covariance')
+plt.title('x-total covariance vs number of particles')
+plt.savefig('x_cov_vs_number.pdf', bbox_inches='tight')
+
+plt.figure('total y-covariance vs number of particles')
+plt.plot([n0, n1, n2, n3], [a_cov0_y, a_cov1_y, a_cov2_y, a_cov3_y], linewidth=1)
+plt.xlabel('number of particles')
+plt.ylabel('y-total covariance')
+plt.title('y-total covariance vs number of particles')
+plt.savefig('y_cov_vs_number.pdf', bbox_inches='tight')
+
+# Plot aver_mse
+plt.figure('average MSE vs number of particles')
+plt.plot([n0, n1, n2, n3], [a_mse0, a_mse1, a_mse2, a_mse3], linewidth=1)
+plt.xlabel('number of particles')
+plt.ylabel('Average MSE')
+plt.title('Average MSE vs number of particles')
+plt.savefig('avg_mse_vs_number.pdf', bbox_inches='tight')
+
 print([a_cov0_x, a_cov1_x, a_cov2_x, a_cov3_x], [a_cov0_y, a_cov1_y, a_cov2_y, a_cov3_y])
-print([a_mse0_x, a_mse1_x, a_mse2_x, a_mse3_x], [a_mse0_y, a_mse1_y, a_mse2_y, a_mse3_y])
+print([a_mse0, a_mse1, a_mse2, a_mse3])

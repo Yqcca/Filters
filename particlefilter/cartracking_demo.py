@@ -27,9 +27,9 @@ R = np.array([[sigma_1**2, 0],
              [0, sigma_2**2]])
 
 # Simulate Motion
-num_steps = 60
+num_steps = 100
 x_0, y_0, vx_0, vy_0 = 0, 0, 0, 0
-N = 100
+N = 500
 
 motion_states = [np.array([x_0, y_0, vx_0, vy_0])]
 for i in range(num_steps):
@@ -46,6 +46,7 @@ for i in range(num_steps):
     measurement_states.append(new_measurement)
 measurement_states = np.array(measurement_states)
 
+w0, m0 = linear_gaussian_resampling_particle_filter(A, Q, H, R, N, num_steps, measurement_states)
 w1, m1 = linear_gaussian_adaptive_resampling_particle_filter(A, Q, H, R, N, num_steps, measurement_states)
 w2, m2 = linear_gaussian_bootstrap_filter(A, Q, H, R, N, num_steps, measurement_states)
 
@@ -53,13 +54,14 @@ w2, m2 = linear_gaussian_bootstrap_filter(A, Q, H, R, N, num_steps, measurement_
 plt.figure('Car Position')
 plt.plot(motion_states[:, 0], motion_states[:, 1])
 plt.scatter(measurement_states[:, 0], measurement_states[:, 1])
+plt.plot(m0[:, 0], m0[:, 1])
 plt.plot(m1[:, 0], m1[:, 1])
 plt.plot(m2[:, 0], m2[:, 1])
 plt.xlabel('x position')
 plt.ylabel('y position')
 plt.title('y position vs x position')
-plt.legend(['Position', 'Measured Postion', 'Particle Filter', 'Bootstrap_Filter'])
-plt.savefig('tmp1.pdf', bbox_inches='tight')
+plt.legend(['Position', 'Measured Postion', 'SIR PF', 'Adaptive SIR PF', 'Bootstrap Filter'])
+plt.savefig('car tracking postion.pdf', bbox_inches='tight')
 
 t = [i for i in range(num_steps)]
 
@@ -80,15 +82,18 @@ def covar(w, A, N, a):
     return l_cov[0, 0], l_cov[1, 1]
 
 # First covariance 
+l_cov01_x, l_cov01_y = covar(w0, Q, N, 1)
 l_cov1_x, l_cov1_y = covar(w1, Q, N, 1)
 l_cov2_x, l_cov2_y = covar(w2, R, N, 1)
 
 # Last covariance
+l_cov03_x, l_cov03_y = covar(w0, Q, N, -1)
 l_cov3_x, l_cov3_y =  covar(w1, Q, N, -1)
 l_cov4_x, l_cov4_y = covar(w2, R, N, -1)
 
 # Middle covariance
 mid = num_steps // 2
+l_cov05_x, l_cov05_y = covar(w0, Q, N, mid)
 l_cov5_x, l_cov5_y = covar(w1, Q, N, mid)
 l_cov6_x, l_cov6_y = covar(w2, R, N, mid)
 
@@ -96,72 +101,78 @@ l_cov6_x, l_cov6_y = covar(w2, R, N, mid)
 plt.figure('x position vs time step')
 plt.plot(t, motion_states[1:, 0])
 plt.scatter(t, measurement_states[1:, 0])
+plt.plot(t, m0[:, 0])
 plt.plot(t, m1[:, 0])
 plt.plot(t, m2[:, 0])
+draw_gaussian_at(mu=m1[1, 0], sd=math.sqrt(l_cov01_x), height=5, xpos=1)
 draw_gaussian_at(mu=m1[1, 0], sd=math.sqrt(l_cov1_x), height=5, xpos=1)
 draw_gaussian_at(mu=m2[1, 0], sd=math.sqrt(l_cov2_x), height=1, xpos=1)
 
+draw_gaussian_at(mu=m1[-1, 0], sd=math.sqrt(l_cov03_x), height=5, xpos=num_steps)
 draw_gaussian_at(mu=m1[-1, 0], sd=math.sqrt(l_cov3_x), height=5, xpos=num_steps)
 draw_gaussian_at(mu=m2[-1, 0], sd=math.sqrt(l_cov4_x), height=1, xpos=num_steps)
 
+draw_gaussian_at(mu=m1[mid, 0], sd=math.sqrt(l_cov05_x), height=5, xpos=mid)
 draw_gaussian_at(mu=m1[mid, 0], sd=math.sqrt(l_cov5_x), height=5, xpos=mid)
 draw_gaussian_at(mu=m2[mid, 0], sd=math.sqrt(l_cov6_x), height=1, xpos=mid)
 
 plt.xlabel('time step')
 plt.ylabel('x position')
 plt.title('x position vs time step')
-plt.legend(['Position', 'Measured Postion', 'Particle Filter', 'Bootstrap_Filter'])
-plt.savefig('tmp2.pdf', bbox_inches='tight')
+plt.legend(['Position', 'Measured Postion', 'SIR PF', 'Adaptive SIR PF', 'Bootstrap Filter'])
+plt.savefig('car tracking x-postion.pdf', bbox_inches='tight')
 
 # Plot x position
 plt.figure('y position vs time step')
 plt.plot(t, motion_states[1:, 1])
 plt.scatter(t, measurement_states[1:, 1])
+plt.plot(t, m0[:, 1])
 plt.plot(t, m1[:, 1])
 plt.plot(t, m2[:, 1])
+draw_gaussian_at(mu=m1[1, 1], sd=math.sqrt(l_cov01_y), height=5, xpos=1)
 draw_gaussian_at(mu=m1[1, 1], sd=math.sqrt(l_cov1_y), height=5, xpos=1)
 draw_gaussian_at(mu=m2[1, 1], sd=math.sqrt(l_cov2_y), height=1, xpos=1)
 
+draw_gaussian_at(mu=m1[-1, 1], sd=math.sqrt(l_cov03_y), height=5, xpos=num_steps)
 draw_gaussian_at(mu=m1[-1, 1], sd=math.sqrt(l_cov3_y), height=5, xpos=num_steps)
 draw_gaussian_at(mu=m2[-1, 1], sd=math.sqrt(l_cov4_y), height=1, xpos=num_steps)
 
+draw_gaussian_at(mu=m1[mid, 1], sd=math.sqrt(l_cov05_y), height=5, xpos=mid)
 draw_gaussian_at(mu=m1[mid, 1], sd=math.sqrt(l_cov5_y), height=5, xpos=mid)
 draw_gaussian_at(mu=m2[mid, 1], sd=math.sqrt(l_cov6_y), height=1, xpos=mid)
 
 plt.xlabel('time step')
 plt.ylabel('y position')
 plt.title('y position vs time step')
-plt.legend(['Position', 'Measured Postion', 'Particle Filter', 'Bootstrap_Filter'])
+plt.legend(['Position', 'Measured Postion', 'SIR PF', 'Adaptive SIR PF', 'Bootstrap Filter'])
+plt.savefig('car tracking y-postion.pdf', bbox_inches='tight')
 
-plt.savefig('tmp3.pdf', bbox_inches='tight')
 
-'''# Mse of adaptive resampling particle filter
-# Compute average MSE
-def aver_mse(m, motion_states, num_steps):
+# Compute total covariance
+def total_covar(w, A, N):
+    l_cov = np.zeros(A.shape)
+    for a in range(len(w)):
+        for i in range(N):
+            l_cov += w[a][i] * A
+    return l_cov[0, 0], l_cov[1, 1]
+
+a_cov0_x, a_cov0_y = total_covar(w0, Q, N)
+a_cov1_x, a_cov1_y = total_covar(w1, Q, N)
+a_cov2_x, a_cov2_y = total_covar(w2, R, N)
+
+
+# Mse of adaptive resampling particle filter
+# Compute total MSE in position
+def avg_mse(m, motion_states, num_steps):
     mse_x = 0
     mse_y = 0
-    for i in range(num_steps):
+    for i in range(num_steps-1):
         mse_x += (m[i, 0] - motion_states[i, 0])**2
         mse_y += (m[i, 1] - motion_states[i, 1])**2
-    mse_x = mse_x / num_steps
-    mse_y = mse_y / num_steps
-    return mse_x, mse_y
+    return (mse_x + mse_y)/(2*num_steps)
 
-mse_x1 = 0
-mse_y1 = 0
-for i in range(num_steps):
-    mse_x1 += (m1[i, 0] - motion_states[i, 0])**2
-    mse_y1 += (m1[i, 1] - motion_states[i, 1])**2
-mse_x1 = mse_x1 / num_steps
-mse_y1 = mse_y1 / num_steps
+a_mse0= avg_mse(m0, motion_states, num_steps)
+a_mse1= avg_mse(m1, motion_states, num_steps)
+a_mse2= avg_mse(m2, motion_states, num_steps)
 
-# Mse of bootstrap filter
-mse_x2 = 0
-mse_y2 = 0
-for i in range(num_steps):
-    mse_x2 += (m2[i, 0] - motion_states[i, 0])**2
-    mse_y2 += (m2[i, 1] - motion_states[i, 1])**2
-mse_x2 = mse_x2 / num_steps
-mse_y2 = mse_y2 / num_steps
-
-print([mse_x1, mse_y1], [mse_x2, mse_y2])'''
+print([a_mse0, a_mse1, a_mse2])
