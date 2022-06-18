@@ -2,7 +2,7 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 from particlefilter import linear_gaussian_adaptive_resampling_particle_filter, linear_gaussian_bootstrap_filter,\
-    linear_gaussian_resampling_particle_filter
+    linear_gaussian_resampling_particle_filter, linear_gaussian_sampling_particle_filter
 from KF import predict, update
 
 dt = 0.1
@@ -51,6 +51,7 @@ measurement_states = np.array(measurement_states)
 w0, m0 = linear_gaussian_resampling_particle_filter(A, Q, H, R, N, num_steps, measurement_states)
 w1, m1 = linear_gaussian_adaptive_resampling_particle_filter(A, Q, H, R, N, num_steps, measurement_states)
 w2, m2 = linear_gaussian_bootstrap_filter(A, Q, H, R, N, num_steps, measurement_states)
+w3, m3 = linear_gaussian_sampling_particle_filter(A, Q, H, R, N, num_steps, measurement_states)
 
 # KF
 m_0 = np.array([0, 0, 0, 0])
@@ -64,7 +65,7 @@ for i in range(num_steps):
     y = measurement_states[i+1]
     m_current, P_current = update(H, R, y, predicted_m, predicted_P)
     filtered_states.append(m_current)
-m3 = np.array(filtered_states)
+m4 = np.array(filtered_states)
 
 # Plot the x, y pos of the states
 plt.figure('Car Position')
@@ -74,10 +75,11 @@ plt.plot(m0[:, 0], m0[:, 1])
 plt.plot(m1[:, 0], m1[:, 1])
 plt.plot(m2[:, 0], m2[:, 1])
 plt.plot(m3[:, 0], m3[:, 1])
+plt.plot(m4[:, 0], m4[:, 1])
 plt.xlabel('x position')
 plt.ylabel('y position')
 plt.title('y position vs x position')
-plt.legend(['Position', 'Measured Postion', 'SIR PF', 'Adaptive SIR PF', 'Bootstrap Filter', 'Kalman Filter'])
+plt.legend(['Position', 'Measured Postion', 'SIR PF', 'Adaptive SIR PF', 'Bootstrap Filter', 'SIS PF', 'Kalman Filter'])
 plt.savefig('car tracking1.pdf', bbox_inches='tight')
 
 t = [i for i in range(num_steps)]
@@ -90,10 +92,11 @@ plt.plot(t, m0[:, 0])
 plt.plot(t, m1[:, 0])
 plt.plot(t, m2[:, 0])
 plt.plot(t, m3[:, 0])
+plt.plot(t, m4[:, 0])
 plt.xlabel('Time step')
 plt.ylabel('x position')
 plt.title('x position vs time step')
-plt.legend(['Position', 'Measured Postion', 'SIR PF', 'Adaptive SIR PF', 'Bootstrap Filter', 'Kalman Filter'])
+plt.legend(['Position', 'Measured Postion', 'SIR PF', 'Adaptive SIR PF', 'Bootstrap Filter', 'SIS PF', 'Kalman Filter'])
 plt.savefig('car tracking2.pdf', bbox_inches='tight')
 
 # Plot x position
@@ -104,10 +107,11 @@ plt.plot(t, m0[:, 1])
 plt.plot(t, m1[:, 1])
 plt.plot(t, m2[:, 1])
 plt.plot(t, m3[:, 1])
+plt.plot(t, m4[:, 1])
 plt.xlabel('Time step')
 plt.ylabel('y position')
 plt.title('y position vs time step')
-plt.legend(['Position', 'Measured Postion', 'SIR PF', 'Adaptive SIR PF', 'Bootstrap Filter', 'Kalman Filter'])
+plt.legend(['Position', 'Measured Postion', 'SIR PF', 'Adaptive SIR PF', 'Bootstrap Filter', 'SIS PF', 'Kalman Filter'])
 plt.savefig('car tracking3.pdf', bbox_inches='tight')
 
 # Compute avg MSE in position
@@ -123,8 +127,9 @@ a_mse0= avg_mse(m0, motion_states, num_steps)
 a_mse1= avg_mse(m1, motion_states, num_steps)
 a_mse2= avg_mse(m2, motion_states, num_steps)
 a_mse3= avg_mse(m3, motion_states, num_steps)
+a_mse4= avg_mse(m4, motion_states, num_steps)
 
-print([a_mse0, a_mse1, a_mse2, a_mse3])
+print([a_mse0, a_mse1, a_mse2, a_mse3, a_mse4])
 
 # Plot the MSE at each step
 def step_mse(m, motion_states, num_steps):
@@ -139,16 +144,18 @@ mse_x0, mse_y0 = step_mse(m0, motion_states, num_steps)
 mse_x1, mse_y1 = step_mse(m1, motion_states, num_steps)
 mse_x2, mse_y2 = step_mse(m2, motion_states, num_steps)
 mse_x3, mse_y3 = step_mse(m3, motion_states, num_steps)
+mse_x4, mse_y4 = step_mse(m4, motion_states, num_steps)
 
 plt.figure('MSE in x-position vs time step')
 plt.plot(t[1:], mse_x0, linewidth = 1)
 plt.plot(t[1:], mse_x1, linewidth = 1)
 plt.plot(t[1:], mse_x2, linewidth = 1)
 plt.plot(t[1:], mse_x3, linewidth = 1)
+plt.plot(t[1:], mse_x4, linewidth = 1)
 plt.xlabel('Time step')
 plt.ylabel('MSE in x-position')
 plt.title('MSE in x-position vs time step')
-plt.legend(['SIR PF', 'Adaptive SIR PF', 'Bootstrap Filter', 'Kalman Filter'])
+plt.legend(['SIR PF', 'Adaptive SIR PF', 'Bootstrap Filter', 'SIS PF', 'Kalman Filter'])
 plt.savefig('car tracking4.pdf', bbox_inches='tight')
 
 plt.figure('MSE in y-position vs time step')
@@ -156,8 +163,9 @@ plt.plot(t[1:], mse_y0, linewidth = 1)
 plt.plot(t[1:], mse_y1, linewidth = 1)
 plt.plot(t[1:], mse_y2, linewidth = 1)
 plt.plot(t[1:], mse_y3, linewidth = 1)
+plt.plot(t[1:], mse_y4, linewidth = 1)
 plt.xlabel('Time step')
 plt.ylabel('MSE in y-position')
 plt.title('MSE in y-position vs time step')
-plt.legend(['SIR PF', 'Adaptive SIR PF', 'Bootstrap Filter', 'Kalman Filter'])
+plt.legend(['SIR PF', 'Adaptive SIR PF', 'Bootstrap Filter', 'SIS PF', 'Kalman Filter'])
 plt.savefig('car tracking5.pdf', bbox_inches='tight')

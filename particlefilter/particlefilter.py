@@ -112,7 +112,7 @@ def check_resampling(w, x):
         return w, x
 
 
-def linear_gaussian_importance_distribution(prev_x, y, A, Q):
+def linear_gaussian_importance_distribution1(prev_x, y, A, Q):
     '''
     Derive the linear gaussian importance distribution.
 
@@ -138,10 +138,39 @@ def linear_gaussian_importance_distribution(prev_x, y, A, Q):
 
     while prev_x.shape != y.shape:
         y = np.append(y, 0)
-    m = 0.6*A@prev_x + 0.4*y
+    m = 0.4*A@prev_x + 0.6*y
     f = stats.multivariate_normal(mean=m, cov=Q)
     return f
 
+def linear_gaussian_importance_distribution2(prev_x, y, A, Q):
+    '''
+    Derive the linear gaussian importance distribution.
+
+    Parameters
+    ----------
+    prev_x : arr
+        A sample of x at the previous time-step.
+
+    y : arr
+        The measurement of x.
+
+    A: arr
+        The transition matrix of the dynamic model.
+
+    Q : arr
+        The process noise.
+
+    Returns
+    ----------
+    f : scipy.stats._multivariate.multivariate_normal_gen
+        The estimated linear gaussian importance distribution.
+    '''
+
+    while prev_x.shape != y.shape:
+        y = np.append(y, 0)
+    m = 0.5*A@prev_x + 0.5*y
+    f = stats.multivariate_normal(mean=m, cov=Q)
+    return f
 
 def linear_gaussian_adaptive_resampling_particle_filter(A, Q, H, R, N, T, y):
     '''
@@ -192,7 +221,7 @@ def linear_gaussian_adaptive_resampling_particle_filter(A, Q, H, R, N, T, y):
         x = np.zeros((N, n))
         w = np.zeros(N)
         for i in range(N):
-            f = linear_gaussian_importance_distribution(prev_x[i], y[k], A, Q)
+            f = linear_gaussian_importance_distribution1(prev_x[i], y[k], A, Q)
             x[i] = np.array(f.rvs(size=1))
             g1 = stats.multivariate_normal(mean=H@x[i], cov=R)
             g2 = stats.multivariate_normal(mean=A@prev_x[i], cov=Q)
@@ -256,7 +285,7 @@ def linear_gaussian_resampling_particle_filter(A, Q, H, R, N, T, y):
         x = np.zeros((N, n))
         w = np.zeros(N)
         for i in range(N):
-            f = linear_gaussian_importance_distribution(prev_x[i], y[k], A, Q)
+            f = linear_gaussian_importance_distribution1(prev_x[i], y[k], A, Q)
             x[i] = np.array(f.rvs(size=1))
             g1 = stats.multivariate_normal(mean=H@x[i], cov=R)
             g2 = stats.multivariate_normal(mean=A@prev_x[i], cov=Q)
@@ -270,6 +299,67 @@ def linear_gaussian_resampling_particle_filter(A, Q, H, R, N, T, y):
         w_record.append(prev_w)
     return w_record, m_final
 
+def linear_gaussian_sampling_particle_filter(A, Q, H, R, N, T, y):
+    '''
+    Derive the linear gaussian importance distribution.
+
+    Parameters
+    ----------
+    A : arr
+        The transition matrix of the dynamic model.
+
+    Q : arr
+        The process noise.
+
+    H : arr
+        The measurement model matrix.
+
+    R : arr
+        The measurement noise.
+
+    N : int
+        The number of samples.
+
+    T : int
+        The number of time steps.
+
+    y : arr
+        The T-length numpy array of measurement.
+
+    Returns
+    ----------
+    w_record: list
+        A list containing N numpy array of weights.
+
+    m_final : arr
+        An numpy array of filtered dynamic states.
+    '''
+
+    # Initialization
+    n = A.shape[0]
+    prev_x, prev_w = prior_sample(np.zeros(n), Q, N)
+    w_record = [prev_w]
+    m_final = np.zeros((T, n))
+    for i in range(N):
+        m_final[0] += prev_w[i] * prev_x[i]
+
+    # Calculate weight for each time step
+    for k in range(1, T):
+        x = np.zeros((N, n))
+        w = np.zeros(N)
+        for i in range(N):
+            f = linear_gaussian_importance_distribution2(prev_x[i], y[k], A, Q)
+            x[i] = np.array(f.rvs(size=1))
+            g1 = stats.multivariate_normal(mean=H@x[i], cov=R)
+            g2 = stats.multivariate_normal(mean=A@prev_x[i], cov=Q)
+            w[i] = (prev_w[i]*g1.pdf(y[k])*g2.pdf(x[i])/f.pdf(x[i])) + np.finfo(float).eps
+        w = normalized_weight(w)
+        for i in range(N):
+            m_final[k] += w[i] * x[i]
+        prev_x = x
+        prev_w = w
+        w_record.append(prev_w)
+    return w_record, m_final
 
 def linear_gaussian_bootstrap_filter(A, Q, H, R, N, T, y):
     '''
