@@ -136,8 +136,13 @@ def linear_gaussian_importance_distribution1(prev_x, y, A, Q):
         The estimated linear gaussian importance distribution.
     '''
 
-    while prev_x.shape != y.shape:
-        y = np.append(y, 0)
+    if isinstance(y, float):
+        y1 = np.zeros(prev_x.shape)
+        y1[0] = y
+        y = y1
+    else:
+        while prev_x.shape != y.shape:
+            y = np.append(y, 0)
     m = 0.4*A@prev_x + 0.6*y
     f = stats.multivariate_normal(mean=m, cov=Q)
     return f
@@ -166,8 +171,13 @@ def linear_gaussian_importance_distribution2(prev_x, y, A, Q):
         The estimated linear gaussian importance distribution.
     '''
 
-    while prev_x.shape != y.shape:
-        y = np.append(y, 0)
+    if isinstance(y, float):
+        y1 = np.zeros(prev_x.shape)
+        y1[0] = y
+        y = y1
+    else:
+        while prev_x.shape != y.shape:
+            y = np.append(y, 0)
     m = 0.5*A@prev_x + 0.5*y
     f = stats.multivariate_normal(mean=m, cov=Q)
     return f
@@ -348,7 +358,7 @@ def linear_gaussian_sampling_particle_filter(A, Q, H, R, N, T, y):
         x = np.zeros((N, n))
         w = np.zeros(N)
         for i in range(N):
-            f = linear_gaussian_importance_distribution2(prev_x[i], y[k], A, Q)
+            f = linear_gaussian_importance_distribution1(prev_x[i], y[k], A, Q)
             x[i] = np.array(f.rvs(size=1))
             g1 = stats.multivariate_normal(mean=H@x[i], cov=R)
             g2 = stats.multivariate_normal(mean=A@prev_x[i], cov=Q)
@@ -445,9 +455,13 @@ def nonlinear_gaussian_importance_distribution1(prev_x, y, f, Q):
     f : scipy.stats._multivariate.multivariate_normal_gen
         The estimated nonlinear gaussian importance distribution.
     '''
-
-    while prev_x.shape != y.shape:
-        y = np.append(y, 0)
+    if isinstance(y, float):
+        y1 = np.zeros(prev_x.shape)
+        y1[0] = y
+        y = y1
+    else:
+        while prev_x.shape != y.shape:
+            y = np.append(y, 0)
     m = 0.3*f(prev_x) + 0.7*y
     f = stats.multivariate_normal(mean=m, cov=Q)
     return f
@@ -475,9 +489,13 @@ def nonlinear_gaussian_importance_distribution2(prev_x, y, f, Q):
     f : scipy.stats._multivariate.multivariate_normal_gen
         The estimated nonlinear gaussian importance distribution.
     '''
-
-    while prev_x.shape != y.shape:
-        y = np.append(y, 0)
+    if isinstance(y, float):
+        y1 = np.zeros(prev_x.shape)
+        y1[0] = y
+        y = y1
+    else:
+        while prev_x.shape != y.shape:
+            y = np.append(y, 0)
     m = 0.4*f(prev_x) + 0.6*y
     f = stats.multivariate_normal(mean=m, cov=Q)
     return f
@@ -658,7 +676,7 @@ def nonlinear_gaussian_sampling_particle_filter(f, Q, h, R, N, T, y):
         x = np.zeros((N, n))
         w = np.zeros(N)
         for i in range(N):
-            f1 = nonlinear_gaussian_importance_distribution2(prev_x[i], y[k], f, Q)
+            f1 = nonlinear_gaussian_importance_distribution1(prev_x[i], y[k], f, Q)
             x[i] = np.array(f1.rvs(size=1))
             g1 = stats.multivariate_normal(mean=h(x[i]), cov=R)
             g2 = stats.multivariate_normal(mean=f(prev_x[i]), cov=Q)
