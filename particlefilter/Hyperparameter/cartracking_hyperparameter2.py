@@ -69,6 +69,7 @@ def linear_gaussian_adaptive_resampling_particle_filter1(A, Q, H, R, N, T, y):
     n = A.shape[0]
     prev_x, prev_w = prior_sample(np.zeros(n), Q, N)
     w_record = [prev_w]
+    var = np.zeros((T, n))
     m_final = np.zeros((T, n))
     for i in range(N):
         m_final[0] += prev_w[i] * prev_x[i]
@@ -85,12 +86,12 @@ def linear_gaussian_adaptive_resampling_particle_filter1(A, Q, H, R, N, T, y):
             w[i] = (prev_w[i]*g1.pdf(y[k])*g2.pdf(x[i])/f.pdf(x[i])) + np.finfo(float).eps
         w = normalized_weight(w)
         w, x = check_resampling(w, x)
-        for i in range(N):
-            m_final[k] += w[i] * x[i]
+        m_final[k] = np.average(x, weights=w, axis=0)
+        var[k]  = np.average((x - m_final[k])**2, weights=w, axis=0)
         prev_x = x
         prev_w = w
         w_record.append(prev_w)
-    return w_record, m_final
+    return w_record, m_final, var
 
 def linear_gaussian_adaptive_resampling_particle_filter2(A, Q, H, R, N, T, y):
     # Initialization
@@ -105,6 +106,7 @@ def linear_gaussian_adaptive_resampling_particle_filter2(A, Q, H, R, N, T, y):
     for k in range(1, T):
         x = np.zeros((N, n))
         w = np.zeros(N)
+        var = np.zeros((T, n))
         for i in range(N):
             f = linear_gaussian_importance_distribution2(prev_x[i], y[k], A, Q)
             x[i] = np.array(f.rvs(size=1))
@@ -113,12 +115,12 @@ def linear_gaussian_adaptive_resampling_particle_filter2(A, Q, H, R, N, T, y):
             w[i] = (prev_w[i]*g1.pdf(y[k])*g2.pdf(x[i])/f.pdf(x[i])) + np.finfo(float).eps
         w = normalized_weight(w)
         w, x = check_resampling(w, x)
-        for i in range(N):
-            m_final[k] += w[i] * x[i]
+        m_final[k] = np.average(x, weights=w, axis=0)
+        var[k]  = np.average((x - m_final[k])**2, weights=w, axis=0)
         prev_x = x
         prev_w = w
         w_record.append(prev_w)
-    return w_record, m_final
+    return w_record, m_final, var
 
 def linear_gaussian_adaptive_resampling_particle_filter3(A, Q, H, R, N, T, y):
     # Initialization
@@ -133,6 +135,7 @@ def linear_gaussian_adaptive_resampling_particle_filter3(A, Q, H, R, N, T, y):
     for k in range(1, T):
         x = np.zeros((N, n))
         w = np.zeros(N)
+        var = np.zeros((T, n))
         for i in range(N):
             f = linear_gaussian_importance_distribution3(prev_x[i], y[k], A, Q)
             x[i] = np.array(f.rvs(size=1))
@@ -141,12 +144,12 @@ def linear_gaussian_adaptive_resampling_particle_filter3(A, Q, H, R, N, T, y):
             w[i] = (prev_w[i]*g1.pdf(y[k])*g2.pdf(x[i])/f.pdf(x[i])) + np.finfo(float).eps
         w = normalized_weight(w)
         w, x = check_resampling(w, x)
-        for i in range(N):
-            m_final[k] += w[i] * x[i]
+        m_final[k] = np.average(x, weights=w, axis=0)
+        var[k]  = np.average((x - m_final[k])**2, weights=w, axis=0)
         prev_x = x
         prev_w = w
         w_record.append(prev_w)
-    return w_record, m_final
+    return w_record, m_final, var
 
 def linear_gaussian_adaptive_resampling_particle_filter4(A, Q, H, R, N, T, y):
     # Initialization
@@ -161,6 +164,7 @@ def linear_gaussian_adaptive_resampling_particle_filter4(A, Q, H, R, N, T, y):
     for k in range(1, T):
         x = np.zeros((N, n))
         w = np.zeros(N)
+        var = np.zeros((T, n))
         for i in range(N):
             f = linear_gaussian_importance_distribution4(prev_x[i], y[k], A, Q)
             x[i] = np.array(f.rvs(size=1))
@@ -169,17 +173,18 @@ def linear_gaussian_adaptive_resampling_particle_filter4(A, Q, H, R, N, T, y):
             w[i] = (prev_w[i]*g1.pdf(y[k])*g2.pdf(x[i])/f.pdf(x[i])) + np.finfo(float).eps
         w = normalized_weight(w)
         w, x = check_resampling(w, x)
-        for i in range(N):
-            m_final[k] += w[i] * x[i]
+        m_final[k] = np.average(x, weights=w, axis=0)
+        var[k]  = np.average((x - m_final[k])**2, weights=w, axis=0)
         prev_x = x
         prev_w = w
         w_record.append(prev_w)
-    return w_record, m_final
+    return w_record, m_final, var
 
 def linear_gaussian_bootstrap_filter(A, Q, H, R, N, T, y):
     # Initialization
     n = A.shape[0]
     w_record = []
+    var = np.zeros((T, n))
     prev_x = np.random.multivariate_normal(mean=np.zeros(n), cov=Q, size=N)
     m_final = np.zeros((T, n))
 
@@ -194,11 +199,11 @@ def linear_gaussian_bootstrap_filter(A, Q, H, R, N, T, y):
             w[i] = g2.pdf(y[k])
         w = normalized_weight(w)
         w, x = resampling(w, x)
-        for i in range(N):
-            m_final[k] += w[i] * x[i]
+        m_final[k] = np.average(x, weights=w, axis=0)
+        var[k]  = np.average((x - m_final[k])**2, weights=w, axis=0)
         prev_x = x
         w_record.append(w)
-    return w_record, m_final
+    return w_record, m_final, var
 
 dt = 0.1
 q_1 = 1
@@ -240,11 +245,22 @@ for i in range(num_steps):
     measurement_states.append(new_measurement)
 measurement_states = np.array(measurement_states)
 
-w0, m0 = linear_gaussian_adaptive_resampling_particle_filter1(A, Q, H, R, N, num_steps, measurement_states)
-w1, m1 = linear_gaussian_adaptive_resampling_particle_filter2(A, Q, H, R, N, num_steps, measurement_states)
-w2, m2 = linear_gaussian_adaptive_resampling_particle_filter3(A, Q, H, R, N, num_steps, measurement_states)
-w3, m3 = linear_gaussian_adaptive_resampling_particle_filter4(A, Q, H, R, N, num_steps, measurement_states)
-w4, m4 = linear_gaussian_bootstrap_filter(A, Q, H, R, N, num_steps, measurement_states)
+w0, m0, var0 = linear_gaussian_adaptive_resampling_particle_filter1(A, Q, H, R, N, num_steps, measurement_states)
+w1, m1, var1 = linear_gaussian_adaptive_resampling_particle_filter2(A, Q, H, R, N, num_steps, measurement_states)
+w2, m2, var2 = linear_gaussian_adaptive_resampling_particle_filter3(A, Q, H, R, N, num_steps, measurement_states)
+w3, m3, var3 = linear_gaussian_adaptive_resampling_particle_filter4(A, Q, H, R, N, num_steps, measurement_states)
+w4, m4, var4 = linear_gaussian_bootstrap_filter(A, Q, H, R, N, num_steps, measurement_states)
+
+var0_x = var0[:, 0]
+var0_y = var0[:, 1]
+var1_x = var1[:, 0]
+var1_y = var1[:, 1]
+var2_x = var2[:, 0]
+var2_y = var2[:, 1]
+var3_x = var3[:, 0]
+var3_y = var3[:, 1]
+var4_x = var4[:, 0]
+var4_y = var4[:, 1]
 
 # Compute avg MSE in position
 def avg_mse(m, motion_states, num_steps):
@@ -293,3 +309,27 @@ plt.legend(['Position', 'Measured Postion', 'Type1 SIR PF', 'Type2 SIR PF', 'Typ
 plt.savefig('model2', bbox_inches='tight')
 
 print([a_mse0, a_mse1, a_mse2, a_mse3, a_mse4])
+
+plt.figure('x variance')
+plt.plot(t, var0_x)
+plt.plot(t, var1_x)
+plt.plot(t, var2_x)
+plt.plot(t, var3_x)
+plt.plot(t, var4_x)
+plt.xlabel('Time step')
+plt.ylabel('x variance')
+plt.title('x variance vs x time step')
+plt.legend(['Type1 SIR PF', 'Type2 SIR PF', 'Type3 SIR PF', 'Type4 SIR PF', 'Bootstrap Filter'])
+plt.savefig('model3', bbox_inches='tight')
+
+plt.figure('y variance')
+plt.plot(t, var0_y)
+plt.plot(t, var1_y)
+plt.plot(t, var2_y)
+plt.plot(t, var3_y)
+plt.plot(t, var4_y)
+plt.xlabel('Time step')
+plt.ylabel('y variance')
+plt.title('y variance vs x time step')
+plt.legend(['Type1 SIR PF', 'Type2 SIR PF', 'Type3 SIR PF', 'Type4 SIR PF', 'Bootstrap Filter'])
+plt.savefig('model4', bbox_inches='tight')

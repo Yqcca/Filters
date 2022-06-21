@@ -1,7 +1,7 @@
 import numpy as np
 import math
 import matplotlib.pyplot as plt
-from particlefilter import linear_gaussian_adaptive_resampling_particle_filter
+from particlefilter import linear_gaussian_bootstrap_filter
 
 dt = 0.1
 q_1 = 1
@@ -51,12 +51,12 @@ for i in range(num_steps):
     measurement_states.append(new_measurement)
 measurement_states = np.array(measurement_states)
 
-w0, m0 = linear_gaussian_adaptive_resampling_particle_filter(A, Q, H, R, n0, num_steps, measurement_states)
-w1, m1 = linear_gaussian_adaptive_resampling_particle_filter(A, Q, H, R, n1, num_steps, measurement_states)
-w2, m2 = linear_gaussian_adaptive_resampling_particle_filter(A, Q, H, R, n2, num_steps, measurement_states)
-w3, m3 = linear_gaussian_adaptive_resampling_particle_filter(A, Q, H, R, n3, num_steps, measurement_states)
-w4, m4 = linear_gaussian_adaptive_resampling_particle_filter(A, Q, H, R, n4, num_steps, measurement_states)
-w5, m5 = linear_gaussian_adaptive_resampling_particle_filter(A, Q, H, R, n5, num_steps, measurement_states)
+x_record0, w0, m0, var0 = linear_gaussian_bootstrap_filter(A, Q, H, R, n0, num_steps, measurement_states)
+x_record1, w1, m1, var1 = linear_gaussian_bootstrap_filter(A, Q, H, R, n1, num_steps, measurement_states)
+x_record2, w2, m2, var2 = linear_gaussian_bootstrap_filter(A, Q, H, R, n2, num_steps, measurement_states)
+x_record3, w3, m3, var3 = linear_gaussian_bootstrap_filter(A, Q, H, R, n3, num_steps, measurement_states)
+x_record4, w4, m4, var4 = linear_gaussian_bootstrap_filter(A, Q, H, R, n4, num_steps, measurement_states)
+x_record5, w5, m5, var5 = linear_gaussian_bootstrap_filter(A, Q, H, R, n5, num_steps, measurement_states)
 
 # Compute avg MSE in position
 def avg_mse(m, motion_states, num_steps):
@@ -132,3 +132,42 @@ plt.title('Average MSE vs number of particles')
 plt.savefig('number_of_particle4.pdf', bbox_inches='tight')
 
 print([a_mse0, a_mse1, a_mse2, a_mse3, a_mse4, a_mse5])
+
+var0_x = var0[:, 0]
+var0_y = var0[:, 1]
+var1_x = var1[:, 0]
+var1_y = var1[:, 1]
+var2_x = var2[:, 0]
+var2_y = var2[:, 1]
+var3_x = var3[:, 0]
+var3_y = var3[:, 1]
+var4_x = var4[:, 0]
+var4_y = var4[:, 1]
+var5_x = var5[:, 0]
+var5_y = var5[:, 1]
+
+plt.figure('x variance')
+plt.plot(t, var0_x)
+plt.plot(t, var1_x)
+plt.plot(t, var2_x)
+plt.plot(t, var3_x)
+plt.plot(t, var4_x)
+plt.plot(t, var5_x)
+plt.xlabel('Time step')
+plt.ylabel('x variance')
+plt.title('x variance vs x time step')
+plt.legend(['N=100 Particle Filter', 'N=300 Particle Filter', 'N=500 Particle Filter', 'N=1000 Particle Filter', 'N=1500 Particle Filter', 'N=3000 Particle Filter'])
+plt.savefig('number_of_particle5.pdf', bbox_inches='tight')
+
+plt.figure('y variance')
+plt.plot(t, var0_y)
+plt.plot(t, var1_y)
+plt.plot(t, var2_y)
+plt.plot(t, var3_y)
+plt.plot(t, var4_y)
+plt.plot(t, var5_y)
+plt.xlabel('Time step')
+plt.ylabel('y variance')
+plt.title('y variance vs x time step')
+plt.legend(['N=100 Particle Filter', 'N=300 Particle Filter', 'N=500 Particle Filter', 'N=1000 Particle Filter', 'N=1500 Particle Filter', 'N=3000 Particle Filter'])
+plt.savefig('number_of_particle6.pdf', bbox_inches='tight')

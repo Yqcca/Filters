@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from particlefilter import linear_gaussian_adaptive_resampling_particle_filter, linear_gaussian_bootstrap_filter,\
     linear_gaussian_resampling_particle_filter, linear_gaussian_sampling_particle_filter
 from KF import predict, update
+import seaborn as sns
 
 dt = 0.1
 q_1 = 1
@@ -46,12 +47,119 @@ for i in range(num_steps):
     new_measurement = H @ motion_states[i] + measurement_noise
     measurement_states.append(new_measurement)
 measurement_states = np.array(measurement_states)
+t = [i for i in range(num_steps)]
 
 # Particle Filter
-w0, m0 = linear_gaussian_resampling_particle_filter(A, Q, H, R, N, num_steps, measurement_states)
-w1, m1 = linear_gaussian_adaptive_resampling_particle_filter(A, Q, H, R, N, num_steps, measurement_states)
-w2, m2 = linear_gaussian_bootstrap_filter(A, Q, H, R, N, num_steps, measurement_states)
-w3, m3 = linear_gaussian_sampling_particle_filter(A, Q, H, R, N, num_steps, measurement_states)
+x_record0, w0, m0, var0 = linear_gaussian_resampling_particle_filter(A, Q, H, R, N, num_steps, measurement_states)
+x_record1, w1, m1, var1 = linear_gaussian_adaptive_resampling_particle_filter(A, Q, H, R, N, num_steps, measurement_states)
+x_record2, w2, m2, var2 = linear_gaussian_bootstrap_filter(A, Q, H, R, N, num_steps, measurement_states)
+x_record3, w3, m3, var3 = linear_gaussian_sampling_particle_filter(A, Q, H, R, N, num_steps, measurement_states)
+
+plt.figure('x position pdf1')
+plt.axvline(x=motion_states[25][0], ls=':')
+sns.histplot(x = x_record0[25][:, 0], weights = w0[25], color = 'purple', kde=True)
+sns.histplot(x = x_record1[25][:, 0], weights = w1[25], color = 'blue', kde=True)
+sns.histplot(x = x_record2[25][:, 0], weights = w2[25], color = 'green', kde=True)
+sns.histplot(x = x_record3[25][:, 0], weights = w3[25], color = 'red', kde=True)
+plt.xlabel('Samples')
+plt.ylabel('Weights')
+plt.title('Particle pdf in x-direction at time step 25')
+plt.legend(['True x-position at step 25', 'SIR PF', 'Adaptive SIR PF', 'Bootstrap Filter', 'SIS PF'])
+plt.savefig('car tracking8.pdf', bbox_inches='tight')
+
+plt.figure('y position pdf1')
+plt.axvline(x=motion_states[25][1], ls=':')
+sns.histplot(x = x_record0[25][:, 1], weights = w0[25], color = 'purple', kde=True)
+sns.histplot(x = x_record1[25][:, 1], weights = w1[25], color = 'blue', kde=True)
+sns.histplot(x = x_record2[25][:, 1], weights = w2[25], color = 'green', kde=True)
+sns.histplot(x = x_record3[25][:, 1], weights = w3[25], color = 'red', kde=True)
+plt.xlabel('Samples')
+plt.ylabel('Weights')
+plt.title('Particle pdf in y-direction at time step 25')
+plt.legend(['True y-position at step 25', 'SIR PF', 'Adaptive SIR PF', 'Bootstrap Filter', 'SIS PF'])
+plt.savefig('car tracking9.pdf', bbox_inches='tight')
+
+
+plt.figure('x position pdf2')
+plt.axvline(x=motion_states[50][0], ls=':')
+sns.histplot(x = x_record0[50][:, 0], weights = w0[50], color = 'purple', kde=True)
+sns.histplot(x = x_record1[50][:, 0], weights = w1[50], color = 'blue', kde=True)
+sns.histplot(x = x_record2[50][:, 0], weights = w2[50], color = 'green', kde=True)
+sns.histplot(x = x_record3[50][:, 0], weights = w3[50], color = 'red', kde=True)
+plt.xlabel('Samples')
+plt.ylabel('Weights')
+plt.title('Particle pdf in x-direction at time step 50')
+plt.legend(['True x-position at step 50', 'SIR PF', 'Adaptive SIR PF', 'Bootstrap Filter', 'SIS PF'])
+plt.savefig('car tracking10.pdf', bbox_inches='tight')
+
+plt.figure('y position pdf2')
+plt.axvline(x=motion_states[50][1], ls=':')
+sns.histplot(x = x_record0[50][:, 1], weights = w0[50], color = 'purple',kde=True)
+sns.histplot(x = x_record1[50][:, 1], weights = w1[50], color = 'blue', kde=True)
+sns.histplot(x = x_record2[50][:, 1], weights = w2[50], color = 'green',kde=True)
+sns.histplot(x = x_record3[50][:, 1], weights = w3[50], color = 'red', kde=True)
+plt.xlabel('Samples')
+plt.ylabel('Weights')
+plt.title('Particle pdf in y-direction at time step 50')
+plt.legend(['True y-position at step 50', 'SIR PF', 'Adaptive SIR PF', 'Bootstrap Filter', 'SIS PF'])
+plt.savefig('car tracking11.pdf', bbox_inches='tight')
+
+plt.figure('x position pdf3')
+plt.axvline(x=motion_states[75][0], ls=':')
+sns.histplot(x = x_record0[75][:, 0], weights = w0[75], color = 'purple',kde=True)
+sns.histplot(x = x_record1[75][:, 0], weights = w1[75], color = 'blue', kde=True)
+sns.histplot(x = x_record2[75][:, 0], weights = w2[75], color = 'green',kde=True)
+sns.histplot(x = x_record3[75][:, 0], weights = w3[75], color = 'red', kde=True)
+plt.xlabel('Samples')
+plt.ylabel('Weights')
+plt.title('Particle pdf in x-direction at time step 75')
+plt.legend(['True x-position at time step 75', 'SIR PF', 'Adaptive SIR PF', 'Bootstrap Filter', 'SIS PF'])
+plt.savefig('car tracking12.pdf', bbox_inches='tight')
+
+plt.figure('y position pdf3')
+plt.axvline(x=motion_states[75][1], ls=':')
+sns.histplot(x = x_record0[75][:, 1], weights = w0[75], color = 'purple',kde=True)
+sns.histplot(x = x_record1[75][:, 1], weights = w1[75], color = 'blue', kde=True)
+sns.histplot(x = x_record2[75][:, 1], weights = w2[75], color = 'green', kde=True)
+sns.histplot(x = x_record3[75][:, 1], weights = w3[75], color = 'red', kde=True)
+plt.xlabel('Samples')
+plt.ylabel('Weights')
+plt.title('Particle pdf in y-direction at time step 75')
+plt.legend(['True y-position at time step 75', 'SIR PF', 'Adaptive SIR PF', 'Bootstrap Filter', 'SIS PF'])
+plt.savefig('car tracking13.pdf', bbox_inches='tight')
+
+
+var0_x = var0[:, 0]
+var0_y = var0[:, 1]
+var1_x = var1[:, 0]
+var1_y = var1[:, 1]
+var2_x = var2[:, 0]
+var2_y = var2[:, 1]
+var3_x = var3[:, 0]
+var3_y = var3[:, 1]
+
+plt.figure('x variance')
+plt.plot(t, var0_x)
+plt.plot(t, var1_x)
+plt.plot(t, var2_x)
+plt.plot(t, var3_x)
+plt.xlabel('Time step')
+plt.ylabel('x variance')
+plt.title('x variance vs x time step')
+plt.legend(['SIR PF', 'Adaptive SIR PF', 'Bootstrap Filter', 'SIS PF'])
+plt.savefig('car tracking6.pdf', bbox_inches='tight')
+
+plt.figure('y variance')
+plt.plot(t, var0_y)
+plt.plot(t, var1_y)
+plt.plot(t, var2_y)
+plt.plot(t, var3_y)
+plt.xlabel('Time step')
+plt.ylabel('y variance')
+plt.title('y variance vs x time step')
+plt.legend(['SIR PF', 'Adaptive SIR PF', 'Bootstrap Filter', 'SIS PF'])
+plt.savefig('car tracking7.pdf', bbox_inches='tight')
+
 
 # KF
 m_0 = np.array([0, 0, 0, 0])
@@ -81,8 +189,6 @@ plt.ylabel('y position')
 plt.title('y position vs x position')
 plt.legend(['Position', 'Measured Postion', 'SIR PF', 'Adaptive SIR PF', 'Bootstrap Filter', 'SIS PF', 'Kalman Filter'])
 plt.savefig('car tracking1.pdf', bbox_inches='tight')
-
-t = [i for i in range(num_steps)]
 
 # Plot x position
 plt.figure('x position vs time step')
@@ -130,42 +236,3 @@ a_mse3= avg_mse(m3, motion_states, num_steps)
 a_mse4= avg_mse(m4, motion_states, num_steps)
 
 print([a_mse0, a_mse1, a_mse2, a_mse3, a_mse4])
-
-# Plot the MSE at each step
-def step_mse(m, motion_states, num_steps):
-    mse_x = []
-    mse_y = []
-    for i in range(num_steps-1):
-        mse_x.append((m[i, 0] - motion_states[i, 0])**2)
-        mse_y.append((m[i, 1] - motion_states[i, 1])**2)
-    return mse_x, mse_y
-
-mse_x0, mse_y0 = step_mse(m0, motion_states, num_steps)
-mse_x1, mse_y1 = step_mse(m1, motion_states, num_steps)
-mse_x2, mse_y2 = step_mse(m2, motion_states, num_steps)
-mse_x3, mse_y3 = step_mse(m3, motion_states, num_steps)
-mse_x4, mse_y4 = step_mse(m4, motion_states, num_steps)
-
-plt.figure('MSE in x-position vs time step')
-plt.plot(t[1:], mse_x0, linewidth = 1)
-plt.plot(t[1:], mse_x1, linewidth = 1)
-plt.plot(t[1:], mse_x2, linewidth = 1)
-plt.plot(t[1:], mse_x3, linewidth = 1)
-plt.plot(t[1:], mse_x4, linewidth = 1)
-plt.xlabel('Time step')
-plt.ylabel('MSE in x-position')
-plt.title('MSE in x-position vs time step')
-plt.legend(['SIR PF', 'Adaptive SIR PF', 'Bootstrap Filter', 'SIS PF', 'Kalman Filter'])
-plt.savefig('car tracking4.pdf', bbox_inches='tight')
-
-plt.figure('MSE in y-position vs time step')
-plt.plot(t[1:], mse_y0, linewidth = 1)
-plt.plot(t[1:], mse_y1, linewidth = 1)
-plt.plot(t[1:], mse_y2, linewidth = 1)
-plt.plot(t[1:], mse_y3, linewidth = 1)
-plt.plot(t[1:], mse_y4, linewidth = 1)
-plt.xlabel('Time step')
-plt.ylabel('MSE in y-position')
-plt.title('MSE in y-position vs time step')
-plt.legend(['SIR PF', 'Adaptive SIR PF', 'Bootstrap Filter', 'SIS PF', 'Kalman Filter'])
-plt.savefig('car tracking5.pdf', bbox_inches='tight')

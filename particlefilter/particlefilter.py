@@ -1,6 +1,7 @@
+from re import X
 import numpy as np
 from scipy import stats
-
+import matplotlib.pyplot as plt
 
 # Linear Gaussian case
 def prior_sample(U, Q, N):
@@ -143,7 +144,7 @@ def linear_gaussian_importance_distribution1(prev_x, y, A, Q):
     else:
         while prev_x.shape != y.shape:
             y = np.append(y, 0)
-    m = 0.4*A@prev_x + 0.6*y
+    m = 0.6*A@prev_x + 0.4*y
     f = stats.multivariate_normal(mean=m, cov=Q)
     return f
 
@@ -183,46 +184,13 @@ def linear_gaussian_importance_distribution2(prev_x, y, A, Q):
     return f
 
 def linear_gaussian_adaptive_resampling_particle_filter(A, Q, H, R, N, T, y):
-    '''
-    Derive the linear gaussian importance distribution.
-
-    Parameters
-    ----------
-    A : arr
-        The transition matrix of the dynamic model.
-
-    Q : arr
-        The process noise.
-
-    H : arr
-        The measurement model matrix.
-
-    R : arr
-        The measurement noise.
-
-    N : int
-        The number of samples.
-
-    T : int
-        The number of time steps.
-
-    y : arr
-        The T-length numpy array of measurement.
-
-    Returns
-    ----------
-    w_record: list
-        A list containing N numpy array of weights.
-
-    m_final : arr
-        An numpy array of filtered dynamic states.
-    '''
-
     # Initialization
     n = A.shape[0]
     prev_x, prev_w = prior_sample(np.zeros(n), Q, N)
     w_record = [prev_w]
+    x_record = [prev_x]
     m_final = np.zeros((T, n))
+    var = np.zeros((T, n))
     for i in range(N):
         m_final[0] += prev_w[i] * prev_x[i]
 
@@ -231,62 +199,29 @@ def linear_gaussian_adaptive_resampling_particle_filter(A, Q, H, R, N, T, y):
         x = np.zeros((N, n))
         w = np.zeros(N)
         for i in range(N):
-            f = linear_gaussian_importance_distribution1(prev_x[i], y[k], A, Q)
+            f = linear_gaussian_importance_distribution2(prev_x[i], y[k], A, Q)
             x[i] = np.array(f.rvs(size=1))
             g1 = stats.multivariate_normal(mean=H@x[i], cov=R)
             g2 = stats.multivariate_normal(mean=A@prev_x[i], cov=Q)
             w[i] = (prev_w[i]*g1.pdf(y[k])*g2.pdf(x[i])/f.pdf(x[i])) + np.finfo(float).eps
         w = normalized_weight(w)
         w, x = check_resampling(w, x)
-        for i in range(N):
-            m_final[k] += w[i] * x[i]
+        m_final[k] = np.average(x, weights=w, axis=0)
+        var[k]  = np.average((x - m_final[k])**2, weights=w, axis=0)
         prev_x = x
         prev_w = w
         w_record.append(prev_w)
-    return w_record, m_final
-
+        x_record.append(prev_x)
+    return x_record, w_record, m_final, var
 
 def linear_gaussian_resampling_particle_filter(A, Q, H, R, N, T, y):
-    '''
-    Derive the linear gaussian importance distribution.
-
-    Parameters
-    ----------
-    A : arr
-        The transition matrix of the dynamic model.
-
-    Q : arr
-        The process noise.
-
-    H : arr
-        The measurement model matrix.
-
-    R : arr
-        The measurement noise.
-
-    N : int
-        The number of samples.
-
-    T : int
-        The number of time steps.
-
-    y : arr
-        The T-length numpy array of measurement.
-
-    Returns
-    ----------
-    w_record: list
-        A list containing N numpy array of weights.
-
-    m_final : arr
-        An numpy array of filtered dynamic states.
-    '''
-
     # Initialization
     n = A.shape[0]
     prev_x, prev_w = prior_sample(np.zeros(n), Q, N)
     w_record = [prev_w]
+    x_record = [prev_x]
     m_final = np.zeros((T, n))
+    var = np.zeros((T, n))
     for i in range(N):
         m_final[0] += prev_w[i] * prev_x[i]
 
@@ -295,60 +230,28 @@ def linear_gaussian_resampling_particle_filter(A, Q, H, R, N, T, y):
         x = np.zeros((N, n))
         w = np.zeros(N)
         for i in range(N):
-            f = linear_gaussian_importance_distribution1(prev_x[i], y[k], A, Q)
+            f = linear_gaussian_importance_distribution2(prev_x[i], y[k], A, Q)
             x[i] = np.array(f.rvs(size=1))
             g1 = stats.multivariate_normal(mean=H@x[i], cov=R)
             g2 = stats.multivariate_normal(mean=A@prev_x[i], cov=Q)
             w[i] = (prev_w[i]*g1.pdf(y[k])*g2.pdf(x[i])/f.pdf(x[i])) + np.finfo(float).eps
         w = normalized_weight(w)
         w, x = resampling(w, x)
-        for i in range(N):
-            m_final[k] += w[i] * x[i]
+        m_final[k] = np.average(x, weights=w, axis=0)
+        var[k]  = np.average((x - m_final[k])**2, weights=w, axis=0)
         prev_x = x
         prev_w = w
         w_record.append(prev_w)
-    return w_record, m_final
+        x_record.append(prev_x)
+    return x_record, w_record, m_final, var
 
 def linear_gaussian_sampling_particle_filter(A, Q, H, R, N, T, y):
-    '''
-    Derive the linear gaussian importance distribution.
-
-    Parameters
-    ----------
-    A : arr
-        The transition matrix of the dynamic model.
-
-    Q : arr
-        The process noise.
-
-    H : arr
-        The measurement model matrix.
-
-    R : arr
-        The measurement noise.
-
-    N : int
-        The number of samples.
-
-    T : int
-        The number of time steps.
-
-    y : arr
-        The T-length numpy array of measurement.
-
-    Returns
-    ----------
-    w_record: list
-        A list containing N numpy array of weights.
-
-    m_final : arr
-        An numpy array of filtered dynamic states.
-    '''
-
     # Initialization
     n = A.shape[0]
     prev_x, prev_w = prior_sample(np.zeros(n), Q, N)
     w_record = [prev_w]
+    x_record = [prev_x]
+    var = np.zeros((T, n))
     m_final = np.zeros((T, n))
     for i in range(N):
         m_final[0] += prev_w[i] * prev_x[i]
@@ -357,6 +260,7 @@ def linear_gaussian_sampling_particle_filter(A, Q, H, R, N, T, y):
     for k in range(1, T):
         x = np.zeros((N, n))
         w = np.zeros(N)
+        var = np.zeros((T, n))
         for i in range(N):
             f = linear_gaussian_importance_distribution1(prev_x[i], y[k], A, Q)
             x[i] = np.array(f.rvs(size=1))
@@ -364,52 +268,20 @@ def linear_gaussian_sampling_particle_filter(A, Q, H, R, N, T, y):
             g2 = stats.multivariate_normal(mean=A@prev_x[i], cov=Q)
             w[i] = (prev_w[i]*g1.pdf(y[k])*g2.pdf(x[i])/f.pdf(x[i])) + np.finfo(float).eps
         w = normalized_weight(w)
-        for i in range(N):
-            m_final[k] += w[i] * x[i]
+        m_final[k] = np.average(x, weights=w, axis=0)
+        var[k]  = np.average((x - m_final[k])**2, weights=w, axis=0)
         prev_x = x
         prev_w = w
         w_record.append(prev_w)
-    return w_record, m_final
+        x_record.append(prev_x)
+    return x_record, w_record, m_final, var
 
 def linear_gaussian_bootstrap_filter(A, Q, H, R, N, T, y):
-    '''
-    Derive the linear gaussian importance distribution.
-
-    Parameters
-    ----------
-    A : arr
-        The transition matrix of the dynamic model.
-
-    Q : arr
-        The process noise.
-
-    H : arr
-        The measurement model matrix.
-
-    R : arr
-        The measurement noise.
-
-    N : int
-        The number of samples.
-
-    T : int
-        The number of time steps.
-
-    y : arr
-        The T-length numpy array of measurement.
-
-    Returns
-    ----------
-    w_record: list
-        A list containing N numpy array of weights.
-
-    m_final : arr
-        An numpy array of filtered dynamic states.
-    '''
-
     # Initialization
     n = A.shape[0]
     w_record = []
+    x_record = []
+    var = np.zeros((T, n))
     prev_x = np.random.multivariate_normal(mean=np.zeros(n), cov=Q, size=N)
     m_final = np.zeros((T, n))
 
@@ -424,11 +296,12 @@ def linear_gaussian_bootstrap_filter(A, Q, H, R, N, T, y):
             w[i] = g2.pdf(y[k])
         w = normalized_weight(w)
         w, x = resampling(w, x)
-        for i in range(N):
-            m_final[k] += w[i] * x[i]
+        m_final[k] = np.average(x, weights=w, axis=0)
+        var[k]  = np.average((x - m_final[k])**2, weights=w, axis=0)
         prev_x = x
         w_record.append(w)
-    return w_record, m_final
+        x_record.append(prev_x)
+    return x_record, w_record, m_final, var
 
 
 # Nonlinear Gaussian case
@@ -462,7 +335,7 @@ def nonlinear_gaussian_importance_distribution1(prev_x, y, f, Q):
     else:
         while prev_x.shape != y.shape:
             y = np.append(y, 0)
-    m = 0.3*f(prev_x) + 0.7*y
+    m = 0.5*f(prev_x) + 0.5*y
     f = stats.multivariate_normal(mean=m, cov=Q)
     return f
 
@@ -501,46 +374,13 @@ def nonlinear_gaussian_importance_distribution2(prev_x, y, f, Q):
     return f
 
 def nonlinear_gaussian_adaptive_resampling_particle_filter(f, Q, h, R, N, T, y):
-    '''
-    Derive the linear gaussian importance distribution.
-
-    Parameters
-    ----------
-    f : func
-        The transition map of the dynamic model.
-
-    Q : arr
-        The process noise.
-
-    h : func
-        The measurement model map.
-
-    R : arr
-        The measurement noise.
-
-    N : int
-        The number of samples.
-
-    T : int
-        The number of time steps.
-
-    y : arr
-        The T-length numpy array of measurement.
-
-    Returns
-    ----------
-    w_record: list
-        A list containing N numpy array of weights.
-
-    m_final : arr
-        An numpy array of filtered dynamic states.
-    '''
-
     # Initialization
     n = Q.shape[0]
     prev_x, prev_w = prior_sample(np.zeros(n), Q, N)
     w_record = [prev_w]
+    x_record = [prev_x]
     m_final = np.zeros((T, n))
+    var = np.zeros((T, n))
     for i in range(N):
         m_final[0] += prev_w[i] * prev_x[i]
 
@@ -556,55 +396,23 @@ def nonlinear_gaussian_adaptive_resampling_particle_filter(f, Q, h, R, N, T, y):
             w[i] = (prev_w[i]*g1.pdf(y[k])*g2.pdf(x[i])/f1.pdf(x[i])) + np.finfo(float).eps
         w = normalized_weight(w)
         w, x = check_resampling(w, x)
-        for i in range(N):
-            m_final[k] += w[i] * x[i]
+        m_final[k] = np.average(x, weights=w, axis=0)
+        var[k]  = np.average((x - m_final[k])**2, weights=w, axis=0)
         prev_x = x
         prev_w = w
         w_record.append(prev_w)
-    return w_record, m_final
+        x_record.append(prev_x)
+    return x_record, w_record, m_final, var
 
 
 def nonlinear_gaussian_resampling_particle_filter(f, Q, h, R, N, T, y):
-    '''
-    Derive the linear gaussian importance distribution.
-
-    Parameters
-    ----------
-    f : func
-        The transition map of the dynamic model.
-
-    Q : arr
-        The process noise.
-
-    h : func
-        The measurement model map.
-
-    R : arr
-        The measurement noise.
-
-    N : int
-        The number of samples.
-
-    T : int
-        The number of time steps.
-
-    y : arr
-        The T-length numpy array of measurement.
-
-    Returns
-    ----------
-    w_record: list
-        A list containing N numpy array of weights.
-
-    m_final : arr
-        An numpy array of filtered dynamic states.
-    '''
-
     # Initialization
     n = Q.shape[0]
     prev_x, prev_w = prior_sample(np.zeros(n), Q, N)
     w_record = [prev_w]
+    x_record = [prev_x]
     m_final = np.zeros((T, n))
+    var = np.zeros((T, n))
     for i in range(N):
         m_final[0] += prev_w[i] * prev_x[i]
 
@@ -620,53 +428,21 @@ def nonlinear_gaussian_resampling_particle_filter(f, Q, h, R, N, T, y):
             w[i] = (prev_w[i]*g1.pdf(y[k])*g2.pdf(x[i])/f1.pdf(x[i])) + np.finfo(float).eps
         w = normalized_weight(w)
         w, x = resampling(w, x)
-        for i in range(N):
-            m_final[k] += w[i] * x[i]
+        m_final[k] = np.average(x, weights=w, axis=0)
+        var[k]  = np.average((x - m_final[k])**2, weights=w, axis=0)
         prev_x = x
         prev_w = w
         w_record.append(prev_w)
-    return w_record, m_final
+        x_record.append(prev_x)
+    return x_record, w_record, m_final, var
 
 def nonlinear_gaussian_sampling_particle_filter(f, Q, h, R, N, T, y):
-    '''
-    Derive the linear gaussian importance distribution.
-
-    Parameters
-    ----------
-    f : func
-        The transition map of the dynamic model.
-
-    Q : arr
-        The process noise.
-
-    h : func
-        The measurement model map.
-
-    R : arr
-        The measurement noise.
-
-    N : int
-        The number of samples.
-
-    T : int
-        The number of time steps.
-
-    y : arr
-        The T-length numpy array of measurement.
-
-    Returns
-    ----------
-    w_record: list
-        A list containing N numpy array of weights.
-
-    m_final : arr
-        An numpy array of filtered dynamic states.
-    '''
-
     # Initialization
     n = Q.shape[0]
     prev_x, prev_w = prior_sample(np.zeros(n), Q, N)
     w_record = [prev_w]
+    x_record = [prev_x]
+    var = np.zeros((T, n))
     m_final = np.zeros((T, n))
     for i in range(N):
         m_final[0] += prev_w[i] * prev_x[i]
@@ -676,57 +452,26 @@ def nonlinear_gaussian_sampling_particle_filter(f, Q, h, R, N, T, y):
         x = np.zeros((N, n))
         w = np.zeros(N)
         for i in range(N):
-            f1 = nonlinear_gaussian_importance_distribution1(prev_x[i], y[k], f, Q)
+            f1 = nonlinear_gaussian_importance_distribution2(prev_x[i], y[k], f, Q)
             x[i] = np.array(f1.rvs(size=1))
             g1 = stats.multivariate_normal(mean=h(x[i]), cov=R)
             g2 = stats.multivariate_normal(mean=f(prev_x[i]), cov=Q)
             w[i] = (prev_w[i]*g1.pdf(y[k])*g2.pdf(x[i])/f1.pdf(x[i])) + np.finfo(float).eps
         w = normalized_weight(w)
-        for i in range(N):
-            m_final[k] += w[i] * x[i]
+        m_final[k] = np.average(x, weights=w, axis=0)
+        var[k]  = np.average((x - m_final[k])**2, weights=w, axis=0)
         prev_x = x
         prev_w = w
         w_record.append(prev_w)
-    return w_record, m_final
+        x_record.append(prev_x)
+    return x_record, w_record, m_final, var
 
 def nonlinear_gaussian_bootstrap_filter(f, Q, h, R, N, T, y):
-    '''
-    Derive the linear gaussian importance distribution.
-
-    Parameters
-    ----------
-    f : func
-        The transition map of the dynamic model.
-
-    Q : arr
-        The process noise.
-
-    h : func
-        The measurement model map.
-
-    R : arr
-        The measurement noise.
-
-    N : int
-        The number of samples.
-
-    T : int
-        The number of time steps.
-
-    y : arr
-        The T-length numpy array of measurement.
-
-    Returns
-    ----------
-    w_record: list
-        A list containing N numpy array of weights.
-
-    m_final : arr
-        An numpy array of filtered dynamic states.
-    '''
     n = Q.shape[0]
     w_record = []
+    x_record = []
     prev_x = np.random.multivariate_normal(mean=np.zeros(n), cov=Q, size=N)
+    var = np.zeros((T, n))
     m_final = np.zeros((T, n))
 
     # Calculate weight for each time step
@@ -740,8 +485,9 @@ def nonlinear_gaussian_bootstrap_filter(f, Q, h, R, N, T, y):
             w[i] = g2.pdf(y[k])
         w = normalized_weight(w)
         w, x = resampling(w, x)
-        for i in range(N):
-            m_final[k] += w[i] * x[i]
+        m_final[k] = np.average(x, weights=w, axis=0)
+        var[k]  = np.average((x - m_final[k])**2, weights=w, axis=0)
         prev_x = x
         w_record.append(w)
-    return w_record, m_final
+        x_record.append(prev_x)
+    return x_record, w_record, m_final, var
