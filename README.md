@@ -26,6 +26,10 @@ In this report, we consider the hidden Markov model, where inference is tractabl
 - Unscented Kalman Filter
 
 ## Particle Filter
+- Sequential importance sampling particle filter
+  1. Linear Gaussian Case
+  2. Nonlinear Gaussian Case
+
 - Sequential importance resampling particle filter
   1. Linear Gaussian Case
   2. Nonlinear Gaussian Case
