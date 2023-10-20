@@ -1,5 +1,5 @@
 # Filters
-Algorithm Implementation for [statistical filters report](https://github.com/Yqcca/Filters/blob/main/Bayesian_Filtering.pdf).
+Algorithm Implementation for Statistical Filters [report](https://github.com/Yqcca/Filters/blob/main/Bayesian_Filtering.pdf).
 
 This repository contains:
 
